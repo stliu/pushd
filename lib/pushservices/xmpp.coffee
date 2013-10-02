@@ -1,0 +1,48 @@
+xmpp = require 'node-xmpp'
+apns = require 'apn'
+elements = require './xmpp-elements'
+class PushServiceXMPP
+    tokenFormat: /^[0-9a-f]{64}$/i
+    validateToken: (token) ->
+        if PushServiceXMPP::tokenFormat.test(token)
+            return token.toLowerCase()
+
+    constructor: (conf, @logger, tokenResolver) ->
+        conf.errorCallback = (errCode, note, device) =>
+            @logger?.error("XMPP Error #{errCode} for subscriber #{device?.subscriberId}")
+        # @driver = new apns.Connection(conf)
+　　　　　　　　@driver = new xmpp.Client({jid: conf.user, password: conf.password, host: conf.host});
+        # @payloadFilter = conf.payloadFilter
+        # 
+        # @feedback = new apns.Feedback(conf)
+        # # Handle Apple Feedbacks
+        # @feedback.on 'feedback', (feedbackData) =>
+        #     feedbackData.forEach (item) =>
+        #         tokenResolver 'apns', item.device.toString(), (subscriber) =>
+        #             subscriber?.get (info) ->
+        #                 if info.updated < item.time
+        #                     @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+        #                     subscriber.delete()
+
+    # what's subOptions? 
+    # here we should only send to the xmpp pubsub node once based on the event name
+    # then mark this envent to ignore the subscritianl push
+    push: (subscriber, subOptions, payload) ->
+        subscriber.get (info) =>
+            note = new apns.Notification()
+            device = new apns.Device(info.token)
+            device.subscriberId = subscriber.id # used for error logging
+            if subOptions?.ignore_message isnt true and alert = payload.localizedMessage(info.lang)
+                note.alert = alert
+            note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
+            note.sound = payload.sound
+            if @payloadFilter?
+                for key, val of payload.data
+                    note.payload[key] = val if key in @payloadFilter
+            else
+                note.payload = payload.data
+            @driver.pushNotification note, device
+            # On iOS we have to maintain the badge counter on the server
+            subscriber.incr 'badge'
+
+exports.PushServiceXMPP = PushServiceXMPP

@@ -1,0 +1,8 @@
+<iq id="u1Mcw-2" to="ac2" type="get"><query xmlns="jabber:iq:register"></query></iq>
+
+<?xml version='1.0' encoding='UTF-8'?><stream:stream xmlns:stream="http://etherx.jabber.org/streams" xmlns="jabber:client" from="ac2" id="238aacf2" xml:lang="en" version="1.0"><stream:features><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"/><session xmlns="urn:ietf:params:xml:ns:xmpp-session"/></stream:features>
+
+<iq type="result" id="u1Mcw-2" from="ac2" to="weiquan5_jma2@ac2/EaseMob"><query xmlns="jabber:iq:register"><username>weiquan5_jma2</username><password></password><email></email><name></name><x xmlns="jabber:x:data" type="form"><title>XMPP Client Registration</title><instructions>Please provide the following information</instructions><field var="FORM_TYPE" type="hidden"><value>jabber:iq:register<alue></field><field var="username" type="text-single" label="Username"><required/><value>weiquan5_jma2<alue></field><field var="name" type="text-single" label="Full name"><value><alue></field><field var="email" type="text-single" label="Email"><value><alue></field><field var="password" type="text-private" label="Password"><required/></field></x><registered/></query></iq>
+
+<iq id="u1Mcw-3" to="ac2" type="set"><query xmlns="jabber:iq:register"><username>weiquan5_jma5</username><password>123456</password><email></email><registered></registered><name></name></query></iq>
+<iq type="result" id="u1Mcw-3" from="ac2" to="weiquan5_jma2@ac2/EaseMob"/>

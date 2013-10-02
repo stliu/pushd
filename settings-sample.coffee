@@ -64,6 +64,13 @@ exports['gcm'] =
 #     # How many concurrent requests to perform
 #     concurrency: 10
 
+exports['xmpp'] = 
+	enabled: yes
+	class: require('./lib/pushservices/xmpp').PushServiceXMPP
+	user: 'admin@ac2'
+	password: 'thepushbox'
+	host: 'push.easemob.com'
+
 exports['http'] =
     enabled: yes
     class: require('./lib/pushservices/http').PushServiceHTTP
