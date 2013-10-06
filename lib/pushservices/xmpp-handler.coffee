@@ -7,25 +7,38 @@ async = require 'async'
 class Handler
   constructor : (@xmppPublisher) ->
     @client = @xmppPublisher.driver
+    @q = {}
+  send : (stanza) =>
+    @client.send(stanza)
+    id = stanza.attrs.id
+    if(id? and not @q[id]?)
+      @q[id] = (result) ->
+        logger.verbose("result of id[#{id}] is #{result}")
 
   iq : (stanza) =>
     logger.verbose "got `iq` message from server:"
     logger.verbose stanza
-    if stanza.attrs.type isnt 'error'
-       async.each( stanza.children, @next, () -> )
+#    if stanza.attrs.type isnt 'error'
+      #check the id from xmpp publisher for handler
+    id = stanza.attrs.id
+    if id? and @q[id]?
+      @q[id](stanza.attrs.type isnt 'error', stanza)
+      delete @q[id]
+    else
+      async.each( stanza.children, @next, () -> )
 
-  message : (stanza) ->
-    logger.verbose "got `message` from server"
-    logger.verbose stanza
-    async.each( stanza.children, @next, () -> )
-
-  active : (stanza) ->
-    logger.verbose "got `active` from server"
-    logger.verbose stanza
-
-  body : (stanza) ->
-    logger.verbose "got `body` from server"
-    logger.verbose stanza
+#  message : (stanza) ->
+#    logger.verbose "got `message` from server"
+#    logger.verbose stanza
+#    async.each( stanza.children, @next, () -> )
+#
+#  active : (stanza) ->
+#    logger.verbose "got `active` from server"
+#    logger.verbose stanza
+#
+#  body : (stanza) ->
+#    logger.verbose "got `body` from server"
+#    logger.verbose stanza
 
   ping : (stanza) ->
     if stanza.attrs.xmlns is 'urn:xmpp:ping'
@@ -44,7 +57,7 @@ class Handler
       logger.verbose "got `ping` message but the xmlns[#{stanza.attrs.xmlns}] is not expected"
 
   presence : (stanza) ->
-    logger.verbose "got the presence response:"
+    logger.verbose "got the `presence` response:"
     logger.verbose stanza
 
   next : (stanza) =>
@@ -65,8 +78,8 @@ class Handler
       logger.error stanza
 
     @client.on "stanza", (stanza) =>
-      logger.verbose "got stanza, now going next:"
-      logger.verbose stanza
+#      logger.verbose "got stanza, now going next:"
+#      logger.verbose stanza
       @next(stanza)
 
 exports.Handler = Handler

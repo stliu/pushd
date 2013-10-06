@@ -3,6 +3,7 @@ apns = require 'apn'
 elements = require './xmpp-elements'
 handler = require './xmpp-handler'
 sys = require 'sys'
+rand = require "generate-key"
 class PushServiceXMPP
     tokenFormat: /^[0-9a-f]{8}$/i
     validateToken: (token) ->
@@ -12,17 +13,19 @@ class PushServiceXMPP
     constructor: (conf, @logger, tokenResolver, eventPublisher) ->
         conf.errorCallback = (errCode, note, device) =>
             @logger?.error("XMPP Error #{errCode} for subscriber #{device?.subscriberId}")
-
+        @host = conf.host
         @driver = new xmpp.Client({jid: conf.user, password: conf.password, host: conf.host})
-        new handler.Handler(@ ).setup()
+        @handler = new handler.Handler(@ )
+        @handler.setup()
 
         eventPublisher.on 'publish_event', (event, playload) =>
             @logger.verbose "publishing event #{event.key} from xmpp with payload:"
             @logger.verbose sys.inspect playload
-            publishElement = elements.publish(event.name, event.name, playload.msg)
+            id = rand.generateKey 7
+            publishElement = elements.publish(id, event.name, playload.msg)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement
-            @driver.send publishElement
+            @handler.send publishElement
 
     # what's subOptions? 
     # here we should only send to the xmpp pubsub node once based on the event name
@@ -36,29 +39,36 @@ class PushServiceXMPP
     createEvent : (subscriber, event, options) ->
         if event.exists is 1
             @logger.debug "pubsub node #{event.name} is not existed yet, about to create"
-            createNodeElement = elements.create_node(event.name, event.name)
+            id = rand.generateKey 7
+            createNodeElement = elements.create_node(id, event.name)
             @logger.verbose createNodeElement
-            @driver.send createNodeElement
+            @handler.send createNodeElement
+        else
+            @logger.verbose "event.exist is not 1, then it is #{event.exists}"
         @logger.verbose "now the pubsub node[#{event.name}] existed, we need to subscribe the subscriber to the node"
         subscriber.get (info) =>
             @logger.verbose "pubsub node is #{event.name}, subscriber info is"
             @logger.verbose sys.inspect info
-            subscribeElement = elements.subscribe(info.jid, event.name, info.jid)
+            id = rand.generateKey 7
+            subscribeElement = elements.subscribe(id, event.name, "#{info.jid}@ac2")
+#            subscribeElement = elements.subscribe(id, event.name, info.jid.toLowerCase())
+
             @logger.verbose subscribeElement
-            @driver.send subscribeElement
+            @handler.send subscribeElement
 
 
-    createSubscriber : (subscriber, fields) ->
+    createSubscriber : (subscriber, fields) =>
         if fields.jid?
             @logger.verbose 'there is already a jid attached, so ignore'
         else
             jid = subscriber.id
             password = subscriber.id
             @logger.verbose "create new user[#{jid}] on xmpp"
-            register = elements.register subscriber.id, jid, password
+            id = rand.generateKey 7
+            register = elements.register id, jid, password
             @logger.verbose "the xml is:"
             @logger.verbose register
-            @driver.send register
+            @handler.send register
             subscriber.set({jid: jid})
         
 

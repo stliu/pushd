@@ -30,16 +30,30 @@ exports.publish = (id, node, message) ->
     }).t(message).root()
 
 exports.subscribe = (id, node, jid) ->
-    return new xmpp.Element('iq', {
-        id: id,
-        to: 'pubsub.ac2',
-        type: 'set'
-    } ).c('pubsub', {
-        xmlns: 'http://jabber.org/protocol/pubsub'
-    }).c('subscribe', {
-        node: node,
-        jid: jid
-    }).root()
+  return new xmpp.Element('iq', {
+    id: id,
+    to: 'pubsub.ac2',
+    type: 'set',
+    from: 'admin@ac2'
+  } ).c('pubsub', {
+    xmlns: 'http://jabber.org/protocol/pubsub#owner'
+  }).c('subscriptions', {
+    node: node
+  })
+  .c('subscription',{jid: jid, subscription:'subscribed'})
+  .root()
+#exports.subscribe = (id, node, jid) ->
+#    return new xmpp.Element('iq', {
+#        id: id,
+#        to: 'pubsub.ac2',
+#        type: 'set',
+#        from: 'admin@ac2'
+#    } ).c('pubsub', {
+#        xmlns: 'http://jabber.org/protocol/pubsub'
+#    }).c('subscribe', {
+#        node: node,
+#        jid: jid
+#    }).root()
 
 exports.create_node = (id, node_name) ->
     return new xmpp.Element('iq', {
@@ -54,7 +68,7 @@ exports.create_node = (id, node_name) ->
     .c('configure', {})
     .c('x', {
         xmlns: 'jabber:x:data',
-        type: 'boolean'
+        type: 'submit'
     })
         .c('field', {
         'var': 'pubsub#persit_items', type: 'boolean'
@@ -77,10 +91,10 @@ exports.create_node = (id, node_name) ->
         'var': 'pubsub#publish_model', type: 'list-single'
     }).c('value').t('open')
         .up().up()
-        .c('field', {
-        'var': 'pubsub#max_items', type: 'list-single'
-    }).c('value').t('-1')
-        .up().up()
+#        .c('field', {
+#        'var': 'pubsub#max_items', type: 'list-single'
+#    }).c('value').t('-1')
+#        .up().up()
         .c('field', {
         'var': 'pubsub#subscribe', type: 'boolean'
     }).c('value').t('1')
@@ -95,5 +109,6 @@ exports.create_node = (id, node_name) ->
         .up().up()
         .c('field', {
         'var': 'pubsub#notify_retract', type: 'boolean'
-    }).c('value').t('0').root()
+    }).c('value').t('0')
+    .root()
 

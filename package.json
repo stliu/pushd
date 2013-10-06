@@ -46,7 +46,8 @@
     "netmask": "~0.0.2",
     "winston": "~0.6.2",
     "junction": "*",
-    "node-xmpp": "~0.6.3"
+    "node-xmpp": "~0.6.3",
+    "generate-key": "0.0.6"
   },
   "devDependencies": {
     "mocha": "*",
