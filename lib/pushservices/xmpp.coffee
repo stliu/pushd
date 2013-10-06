@@ -15,19 +15,6 @@ class PushServiceXMPP
 
         @driver = new xmpp.Client({jid: conf.user, password: conf.password, host: conf.host})
         new handler.Handler(@ ).setup()
-#        handler.setup(@)
-#        @driver.on 'online', () =>
-#            @driver.send(new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy'))
-#        @driver.on 'error', (stanza) =>
-#            #todo some error handle here
-#            @logger.error "something wrong happening"
-#            @logger.error stanza
-#        @driver.on "stanza", (stanza) =>
-#            @logger.verbose "got message from xmpp server:"
-#            @logger.verbose stanza
-#            handler.pong(stanza, @driver)
-
-
 
         eventPublisher.on 'publish_event', (event, playload) =>
             @logger.verbose "publishing event #{event.key} from xmpp with payload:"
@@ -51,14 +38,14 @@ class PushServiceXMPP
             @logger.debug "pubsub node #{event.name} is not existed yet, about to create"
             createNodeElement = elements.create_node(event.name, event.name)
             @logger.verbose createNodeElement
-#            @driver.send createNodeElement
+            @driver.send createNodeElement
         @logger.verbose "now the pubsub node[#{event.name}] existed, we need to subscribe the subscriber to the node"
         subscriber.get (info) =>
             @logger.verbose "pubsub node is #{event.name}, subscriber info is"
             @logger.verbose sys.inspect info
             subscribeElement = elements.subscribe(info.jid, event.name, info.jid)
             @logger.verbose subscribeElement
-            #@driver.send subscribeElement
+            @driver.send subscribeElement
 
 
     createSubscriber : (subscriber, fields) ->
@@ -71,7 +58,7 @@ class PushServiceXMPP
             register = elements.register subscriber.id, jid, password
             @logger.verbose "the xml is:"
             @logger.verbose register
-            #@driver.send register
+            @driver.send register
             subscriber.set({jid: jid})
         
 

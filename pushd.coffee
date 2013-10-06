@@ -22,8 +22,8 @@ if settings.server?.redis_auth?
 
 createSubscriber = (fields, cb) ->
     logger.verbose "creating subscriber proto = #{fields.proto}, token = #{fields.token}"
-    throw new Error("Invalid value for `proto'") unless service = pushServices.getService(fields.proto)
-    throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
+    throw new Error("Invalid value for `proto:#{fields.proto}'") unless service = pushServices.getService(fields.proto)
+    throw new Error("Invalid value for `token:#{fields.token}'") unless fields.token = service.validateToken(fields.token)
 
     # Subscriber::create(redis, fields, cb)
     Subscriber::create redis, fields, (subscriber, created, tentatives) ->
