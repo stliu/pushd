@@ -18,7 +18,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
             createSubscriber fields, (subscriber, created) ->
                 subscriber.get (info) ->
                     info.id = subscriber.id
-                    res.header 'Location', "/subscriber/#{subscriber.id}"
+                    res.location "/subscriber/#{subscriber.id}"
                     res.json info, if created then 201 else 200
         catch error
             logger.error "Creating subscriber failed: #{error.message}"

@@ -34,7 +34,7 @@ class PushServiceXMPP
 
 
     createEvent : (subscriber, event, options) ->
-        if event.exists? is 1
+        if event.exists is 1
             @logger.debug "pubsub node #{event.name} is not existed yet, about to create"
             createNodeElement = elements.create_node(event.name, event.name)
             @logger.verbose createNodeElement

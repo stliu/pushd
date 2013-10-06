@@ -60,12 +60,13 @@ checkUserAndPassword = (username, password) =>
 app = express()
 
 app.configure ->
-    app.use(express.logger(':method :url :status')) if settings.server?.access_log
+    app.use(express.logger(':date :remote-addr :method :url :status :response-time')) if settings.server?.access_log
     app.use(express.limit('1mb')) # limit posted data to 1MB
     if settings.server?.auth? and not settings.server?.acl?
         app.use(express.basicAuth checkUserAndPassword)
     app.use(express.bodyParser())
     app.use(app.router)
+    app.enable('trust proxy')
     app.disable('x-powered-by');
 
 # set up subscriber instance from subscriber_id
