@@ -2,7 +2,7 @@ crypto = require 'crypto'
 async = require 'async'
 Event = require('./event').Event
 logger = require 'winston'
-
+sys = require 'sys'
 class Subscriber
     getInstanceFromToken: (redis, proto, token, cb) ->
         return until cb
@@ -201,12 +201,15 @@ class Subscriber
                         options: parseInt(results[1], 10)
                 else
                     cb(null) # null if subscriber doesn't exist
-
+    # add the subscripter to an event
     addSubscription: (event, options, cb) ->
         @redis.multi()
             # check subscriber existance
-            .zscore("subscribers", @id)
+            # Get the score associated with the given member in a sorted set
+            # @id here is device id
+            .zscore("subscribers", @id) 
             # add event to subscriber's subscriptions list
+            # @key is 'subscribers'
             .zadd("#{@key}:evts", options, event.name)
             # add subscriber to event's subscribers list
             .zadd("#{event.key}:subs", options, @id)
@@ -215,9 +218,13 @@ class Subscriber
             # lazily add event to the global event list
             .sadd("events", event.name)
             .exec (err, results) =>
+                # 这个返回结果是啥? 是第一个 .zscore("subscribers", @id)  的?
+                # 从代码上看是这样的, 可是为啥只判断了这个subscriber的score就认为已经添加了?
+                # 是不是应该是整个multi的返回结果呢, 那么这个results[0]应该是最后一个吧?
                 if results[0]? # subscriber exists?
                     logger.verbose "Registered subscriber #{@id} to event #{event.name}"
-                    cb(results[1] is 1) if cb
+                    event['exists'] = results[4]
+                    cb(results[1] is 1, this, event) if cb
                 else
                     # Tried to add a sub on an unexisting subscriber, remove just added sub
                     # This is an exception so we don't first check subscriber existance before to add sub,

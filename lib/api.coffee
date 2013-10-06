@@ -1,13 +1,13 @@
 async = require 'async'
 util = require 'util'
 logger = require 'winston'
-
+sys = require 'sys'
 filterFields = (params) ->
     fields = {}
-    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version']
+    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version','jid']
     return fields
 
-exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher) ->
+exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher, createAndSubscribe) ->
     authorize ?= (realm) ->
 
     # subscriber registration
@@ -130,11 +130,16 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
     # Subscribe a subscriber to an event
     app.post '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
         options = 0
+
         if parseInt req.body.ignore_message
             options |= req.event.OPTION_IGNORE_MESSAGE
-        req.subscriber.addSubscription req.event, options, (added) ->
+        req.subscriber.addSubscription req.event, options, (added, subscriber, event) =>
             if added? # added is null if subscriber doesn't exist
+                createAndSubscribe subscriber, event, options
                 res.send if added then 201 else 204
+#                console.log(sys.inspect(pushServices))
+#                pushServices.createEvent req.event, options, (finallyAdded) ->
+#                res.send if added then 201 else 204
             else
                 logger.error "No subscriber #{req.subscriber.id}"
                 res.send 404

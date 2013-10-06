@@ -9,7 +9,9 @@ class Event
         throw new Error("Missing redis connection") if not redis?
         throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name
         @key = "event:#{@name}"
-
+        logger.verbose "new event #{@name} constructor"
+    
+    # get the info of this event, including how many subscriptions and all of other event keys/values
     info: (cb) ->
         return until cb
         @redis.multi()
@@ -27,14 +29,18 @@ class Event
                     cb(info)
                 else
                     cb(null)
-
+    #check if this event is already exist in the DB or not
+    #'broadcast' is always existed
     exists: (cb) ->
         if @name is 'broadcast'
             cb(true)
         else
             @redis.sismember "events", @name, (err, exists) =>
                 cb(exists)
-
+    # delete this event from DB
+    # first, we need to unsubscribe from this event ( it's stored in the 'subscribers:@id:evts')
+    # then delete the key of this event 'event:@event_name'
+    # finally, remove this event name from 'events'
     delete: (cb) ->
         logger.verbose "Deleting event #{@name}"
 

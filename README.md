@@ -56,11 +56,11 @@ At first launch, your app must register with the push notification service to ge
 
 Subscriber registration is performed through a HTTP REST API (see later for more details). Here is an example of a subscriber registration simulated using the curl command. As an example, we will register the iOS device with the registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the subscriber language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machine as pushd:
 
-    $ curl -d proto=apns \
+    $ curl -d proto=xmpp \
            -d token=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660 \
            -d lang=fr \
            -d badge=0 \
-           http://localhost/subscribers
+           http://localhost:5000/subscribers
 
 In reply, we get the following JSON structure:
 
@@ -92,7 +92,7 @@ Depending on your service, your app may auto-subscribe the subscriber to some ev
 
 For instance, if your app is news related, you may want to create one subscriptable event for each news category. So if your user wants to subscribe to `sport` events, the following call to pushd has to be performed:
 
-    $ curl -X POST http://localhost/subscriber/J8lHY4X1XkU/subscriptions/sport
+    $ curl -X POST http://localhost/subscriber/4EC98Sj2Djo/subscriptions/sport
 
 You may later unsubscribe by switching from the `POST` to the `DELETE` method.
 

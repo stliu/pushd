@@ -49,6 +49,7 @@ class Subscriber:
         data = 'proto=%s&token=%s&lang=fi&badge=0' % (self.proto, self.token)
         response = urllib.urlopen(PUSHD_SERVER + '/subscribers', data).read()
         parsedResponse = json.loads(response)
+        print parsedResponse
         if 'id' not in parsedResponse:
             raise RuntimeError('No id in the reponse')
         self.subscriberId = parsedResponse['id']
@@ -107,10 +108,10 @@ def startPushProcesses(targets):
 
 def settings():
     # events and notification frequencies
-    push_targets = [RepeatingMessage('performancetest1', 2),
-                   RepeatingMessage('performancetest2', 10)]
-    subscribers = [generateRandomHTTPSubscribers(push_targets[0].event, 10),
-                  generateRandomHTTPSubscribers(push_targets[1].event, 5)]
+    push_targets = [RepeatingMessage('performancetest1', 200),
+                   RepeatingMessage('performancetest2', 1000)]
+    subscribers = [generateRandomHTTPSubscribers(push_targets[0].event, 10000),
+                  generateRandomHTTPSubscribers(push_targets[1].event, 500)]
     return push_targets, subscribers
 
 def main():

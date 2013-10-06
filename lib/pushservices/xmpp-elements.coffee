@@ -13,6 +13,8 @@ exports.register = (id, jid, password) ->
     .up()
     .c('name')
     .root()
+exports.presence = () ->
+  return new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy')
 
 exports.publish = (id, node, message) ->
     return new xmpp.Element('iq', {
@@ -32,8 +34,7 @@ exports.subscribe = (id, node, jid) ->
         id: id,
         to: 'pubsub.ac2',
         type: 'set'
-    });
-    iq.c('pubsub', {
+    } ).c('pubsub', {
         xmlns: 'http://jabber.org/protocol/pubsub'
     }).c('subscribe', {
         node: node,
@@ -56,43 +57,43 @@ exports.create_node = (id, node_name) ->
         type: 'boolean'
     })
         .c('field', {
-        var: 'pubsub#persit_items', type: 'boolean'
+        'var': 'pubsub#persit_items', type: 'boolean'
     }).c('value').t('0')
         .up()
     .up()
         .c('field', {
-        var: 'pubsub#presence_based_delivery', type: 'boolean'
+        'var': 'pubsub#presence_based_delivery', type: 'boolean'
     }).c('value').t('0')
         .up().up()
         .c('field', {
-        var: 'pubsub#deliver_payloads', type: 'boolean'
+        'var': 'pubsub#deliver_payloads', type: 'boolean'
     }).c('value').t('1')
         .up().up()
         .c('field', {
-        var: 'pubsub#access_model', type: 'list-single'
+        'var': 'pubsub#access_model', type: 'list-single'
     }).c('value').t('open')
         .up().up()
         .c('field', {
-        var: 'pubsub#publish_model', type: 'list-single'
+        'var': 'pubsub#publish_model', type: 'list-single'
     }).c('value').t('open')
         .up().up()
         .c('field', {
-        var: 'pubsub#max_items', type: 'list-single'
+        'var': 'pubsub#max_items', type: 'list-single'
     }).c('value').t('-1')
         .up().up()
         .c('field', {
-        var: 'pubsub#subscribe', type: 'boolean'
+        'var': 'pubsub#subscribe', type: 'boolean'
     }).c('value').t('1')
         .up().up()
         .c('field', {
-        var: 'pubsub#notify_config', type: 'boolean'
+        'var': 'pubsub#notify_config', type: 'boolean'
     }).c('value').t('0')
         .up().up()
         .c('field', {
-        var: 'pubsub#notify_delete', type: 'boolean'
+        'var': 'pubsub#notify_delete', type: 'boolean'
     }).c('value').t('0')
         .up().up()
         .c('field', {
-        var: 'pubsub#notify_retract', type: 'boolean'
+        'var': 'pubsub#notify_retract', type: 'boolean'
     }).c('value').t('0').root()
 

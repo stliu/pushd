@@ -14,7 +14,7 @@ class EventPublisher extends events.EventEmitter
             logger.error 'Invalid payload ' + e
             cb(-1) if cb
             return
-
+        @.emit('publish_event', event, payload)
         @.emit(event.name, event, payload)
 
         event.exists (exists) =>
