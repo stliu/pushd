@@ -217,9 +217,9 @@ class Subscriber
             # @key is 'subscribers'
             .zadd("#{@key}:evts", options, event.fullkey)
             # add subscriber to event's subscribers list
-            .zadd("#{event.key}:subs", options, @id)
+            .zadd("#{event.eventkey}:subs", options, @id)
             # set the event created field if not already there (event is lazily created on first subscription)
-            .hsetnx(event.key, "created", Math.round(new Date().getTime() / 1000))
+            .hsetnx(event.eventkey, "created", Math.round(new Date().getTime() / 1000))
             # lazily add event to the global event list
             .sadd("events", event.fullkey)
             .exec (err, results) =>
@@ -238,9 +238,9 @@ class Subscriber
                         # remove the wrongly created subs subscriber relation
                         .del("#{@key}:evts", event.fullkey)
                         # remove the subscriber from the event's subscribers list
-                        .zrem("#{event.key}:subs", @id)
+                        .zrem("#{event.eventkey}:subs", @id)
                         # check if the subscriber list still exist after previous zrem
-                        .zcard("#{event.key}:subs")
+                        .zcard("#{event.eventkey}:subs")
                         .exec (err, results) =>
                             if results[2] is 0
                                 # The event subscriber list is now empty, clean it
@@ -254,19 +254,17 @@ class Subscriber
             # remove event from subscriber's subscriptions list
             .zrem("#{@key}:evts", event.fullkey)
             # remove the subscriber from the event's subscribers list
-            .zrem("#{event.key}:subs", @id)
+            .zrem("#{event.eventkey}:subs", @id)
             # check if the subscriber list still exist after previous zrem
-            .zcard("#{event.key}:subs")
+            .zcard("#{event.eventkey}:subs")
             .exec (err, results) =>
-                if results[3] is 0
-                    # The event subscriber list is now empty, clean it
-                    event.delete() # TOFIX possible race condition
-
+                if err?
+                    cb(err)
                 if results[0]? # subscriber exists?
                     wasRemoved = results[1] is 1 # true if removed, false if wasn't subscribed
                     if wasRemoved
                         logger.verbose "Subscriber #{@id} unregistered from event #{event.fullkey}"
-                    cb(wasRemoved) if cb
+                    cb(null, wasRemoved) if cb
                 else
                     cb(null) if cb # null if subscriber doesn't exist
 

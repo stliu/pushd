@@ -64,7 +64,7 @@ rest_server = express()
 
 rest_server.configure ->
     rest_server.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-    rest_server.use(express.logger(':date :remote-addr :method :url :status :response-time')) if settings.server?.access_log
+    rest_server.use(express.logger('[:date] :remote-addr :method :url :status :response-time')) if settings.server?.access_log
     rest_server.use(express.limit('1mb')) # limit posted data to 1MB
     rest_server.use(express.bodyParser())
     rest_server.use(rest_server.router)

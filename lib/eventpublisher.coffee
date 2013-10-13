@@ -37,29 +37,32 @@ class EventPublisher extends events.EventEmitter
             logger.silly payload.localizedMessage('en')
 
             protoCounts = {}
-            event.forEachSubscribers (subscriber, subOptions, done) =>
-                # action
-                subscriber.get (info) =>
-                    if info?.proto?
-                        if protoCounts[info.proto]?
-                            protoCounts[info.proto] += 1
-                        else
-                            protoCounts[info.proto] = 1
+            action = (subscriber, subOptions, done) =>
+              # action
+              subscriber.get (info) =>
+                if info?.proto?
+                  if protoCounts[info.proto]?
+                    protoCounts[info.proto] += 1
+                  else
+                    protoCounts[info.proto] = 1
 
-                @pushServices.push(subscriber, subOptions, payload, done)
-            , (totalSubscribers) =>
-                # finished
-                logger.verbose "Pushed to #{totalSubscribers} subscribers"
-                for proto, count of protoCounts
-                    logger.verbose "#{count} #{proto} subscribers"
-    
-                if totalSubscribers > 0
-                    # update some event' stats
-                    event.log =>
-                        cb(totalSubscribers) if cb
-                else
-                    # if there is no subscriber, cleanup the event
-                    event.delete =>
-                        cb(0) if cb
+              @pushServices.push(subscriber, subOptions, payload, done)
+
+            finished =  (totalSubscribers) =>
+              # finished
+              logger.verbose "Pushed to #{totalSubscribers} subscribers"
+              for proto, count of protoCounts
+                logger.verbose "#{count} #{proto} subscribers"
+
+              if totalSubscribers > 0
+                # update some event' stats
+                event.log =>
+                  cb(totalSubscribers) if cb
+              else
+                # if there is no subscriber, cleanup the event
+                event.delete =>
+                  cb(0) if cb
+
+            event.forEachSubscribers(action, finished)
 
 exports.EventPublisher = EventPublisher
