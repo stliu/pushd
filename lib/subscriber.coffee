@@ -47,6 +47,7 @@ class Subscriber
                 # register the subscriber using a randomly generated id
                 crypto.randomBytes 8, (ex, buf) =>
                     # generate a base64url random uniq id
+                    # id = fields.appkey+"_"+buf.toString('base64').replace(/\=+$/, '').replace(/\//g, '_').replace(/\+/g, '-')
                     id = buf.toString('base64').replace(/\=+$/, '').replace(/\//g, '_').replace(/\+/g, '-')
                     redis.watch "subscriber:#{id}", =>
                         redis.exists "subscriber:#{id}", (err, exists) =>
@@ -80,6 +81,7 @@ class Subscriber
     constructor: (@redis, @id) ->
         @info = null
         @key = "subscriber:#{@id}"
+        logger.verbose "constructing new subscriber with id #{@id}"
 
     delete: (cb) ->
         @redis.multi()
@@ -136,6 +138,8 @@ class Subscriber
         # TODO handle token update needed for Android
         throw new Error("Can't modify `token` field") if fieldsAndValues.token?
         throw new Error("Can't modify `proto` field") if fieldsAndValues.proto?
+        throw new Error("Can't modify `appkey` field") if fieldsAndValues.appkey?
+#        throw new Error("Can't modify `jid` field") if fieldsAndValues.jid?
         fieldsAndValues.updated = Math.round(new Date().getTime() / 1000)
         @redis.multi()
             # check subscriber existance
@@ -193,7 +197,7 @@ class Subscriber
             # check subscriber existance
             .zscore("subscribers", @id)
             # gather all subscriptions
-            .zscore("#{@key}:evts", event.name)
+            .zscore("#{@key}:evts", event.fullkey)
             .exec (err, results) =>
                 if results[0]? and results[1]? # subscriber and subscription exists?
                     cb
@@ -203,6 +207,7 @@ class Subscriber
                     cb(null) # null if subscriber doesn't exist
     # add the subscripter to an event
     addSubscription: (event, options, cb) ->
+        logger.verbose "add subscriber[#{@id}] to event[#{event.fullkey}]"
         @redis.multi()
             # check subscriber existance
             # Get the score associated with the given member in a sorted set
@@ -210,19 +215,19 @@ class Subscriber
             .zscore("subscribers", @id) 
             # add event to subscriber's subscriptions list
             # @key is 'subscribers'
-            .zadd("#{@key}:evts", options, event.name)
+            .zadd("#{@key}:evts", options, event.fullkey)
             # add subscriber to event's subscribers list
             .zadd("#{event.key}:subs", options, @id)
             # set the event created field if not already there (event is lazily created on first subscription)
             .hsetnx(event.key, "created", Math.round(new Date().getTime() / 1000))
             # lazily add event to the global event list
-            .sadd("events", event.name)
+            .sadd("events", event.fullkey)
             .exec (err, results) =>
                 # 这个返回结果是啥? 是第一个 .zscore("subscribers", @id)  的?
                 # 从代码上看是这样的, 可是为啥只判断了这个subscriber的score就认为已经添加了?
                 # 是不是应该是整个multi的返回结果呢, 那么这个results[0]应该是最后一个吧?
                 if results[0]? # subscriber exists?
-                    logger.verbose "Registered subscriber #{@id} to event #{event.name}"
+                    logger.verbose "Registered subscriber #{@id} to event #{event.fullkey}"
                     event['exists'] = results[4]
                     cb(results[1] is 1, this, event) if cb
                 else
@@ -231,7 +236,7 @@ class Subscriber
                     # but we manually rollback the subscription in case of error
                     @redis.multi()
                         # remove the wrongly created subs subscriber relation
-                        .del("#{@key}:evts", event.name)
+                        .del("#{@key}:evts", event.fullkey)
                         # remove the subscriber from the event's subscribers list
                         .zrem("#{event.key}:subs", @id)
                         # check if the subscriber list still exist after previous zrem
@@ -247,7 +252,7 @@ class Subscriber
             # check subscriber existance
             .zscore("subscribers", @id)
             # remove event from subscriber's subscriptions list
-            .zrem("#{@key}:evts", event.name)
+            .zrem("#{@key}:evts", event.fullkey)
             # remove the subscriber from the event's subscribers list
             .zrem("#{event.key}:subs", @id)
             # check if the subscriber list still exist after previous zrem
@@ -260,7 +265,7 @@ class Subscriber
                 if results[0]? # subscriber exists?
                     wasRemoved = results[1] is 1 # true if removed, false if wasn't subscribed
                     if wasRemoved
-                        logger.verbose "Subscriber #{@id} unregistered from event #{event.name}"
+                        logger.verbose "Subscriber #{@id} unregistered from event #{event.fullkey}"
                     cb(wasRemoved) if cb
                 else
                     cb(null) if cb # null if subscriber doesn't exist

@@ -8,6 +8,7 @@ redis = require('redis').createClient(settings.server.redis_socket or settings.s
 Subscriber = require('./lib/subscriber').Subscriber
 EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
+Application = require('./lib/app').App
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
 logger = require 'winston'
@@ -24,11 +25,13 @@ createSubscriber = (fields, cb) ->
     logger.verbose "creating subscriber proto = #{fields.proto}, token = #{fields.token}"
     throw new Error("Invalid value for `proto:#{fields.proto}'") unless service = pushServices.getService(fields.proto)
     throw new Error("Invalid value for `token:#{fields.token}'") unless fields.token = service.validateToken(fields.token)
-
+    logger.verbose "-------------- create subscriber: app key: " + fields.appkey
     # Subscriber::create(redis, fields, cb)
-    Subscriber::create redis, fields, (subscriber, created, tentatives) ->
+    Subscriber::create redis, fields, (subscriber, created, tentatives) =>
+        logger.verbose "-------------- subscriber.create: app key: " + fields.appkey
         # give push services a chance
-        service.createSubscriber subscriber, fields if created && service.createSubscriber?
+        if created and service.createSubscriber?
+          service.createSubscriber subscriber, fields
         cb subscriber, fields, tentatives
 
 tokenResolver = (proto, token, cb) ->
@@ -57,117 +60,69 @@ checkUserAndPassword = (username, password) =>
         return passwordOK
     return false
 
-app = express()
+rest_server = express()
 
-app.configure ->
-    app.use(express.logger(':date :remote-addr :method :url :status :response-time')) if settings.server?.access_log
-    app.use(express.limit('1mb')) # limit posted data to 1MB
-    if settings.server?.auth? and not settings.server?.acl?
-        app.use(express.basicAuth checkUserAndPassword)
-    app.use(express.bodyParser())
-    app.use(app.router)
-    app.enable('trust proxy')
-    app.disable('x-powered-by');
+rest_server.configure ->
+    rest_server.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+    rest_server.use(express.logger(':date :remote-addr :method :url :status :response-time')) if settings.server?.access_log
+    rest_server.use(express.limit('1mb')) # limit posted data to 1MB
+    rest_server.use(express.bodyParser())
+    rest_server.use(rest_server.router)
+    rest_server.enable('trust proxy')
+    rest_server.disable('x-powered-by');
+    rest_server.use(express.responseTime())
+#    rest_server.use(App::auth())
 
-# set up subscriber instance from subscriber_id
-app.param 'subscriber_id', (req, res, next, id) ->
-    try
-        req.subscriber = new Subscriber(redis, req.params.subscriber_id)
-        delete req.params.subscriber_id
-        next()
-    catch error
-        res.json error: error.message, 400
 
-getEventFromId = (id) ->
-    return new Event(redis, id)
+
+
+
+getEventFromId = (appkey, id) ->
+    return new Event(redis,appkey, id)
 
 testSubscriber = (subscriber) ->
     pushServices.push(subscriber, null, new Payload({msg: "Test", "data.test": "ok"}))
 
-# set up event instance from event_id
-app.param 'event_id', (req, res, next, id) ->
+
+getAppFromKey = (id) ->
+    return new Application(redis, id)
+
+rest_server.all '*', (req, res, next) ->
     try
-        req.event = getEventFromId(req.params.event_id)
+#        if req.header.appkey?
+        appkey = req.get('appkey' )
+        throw new Error("missing app key in request header") if not appkey?
+        logger.verbose("------------------- " + appkey)
+        req.application = getAppFromKey(appkey)
+        next()
+    catch error
+        res.json error: error.message, 400
+# set up subscriber instance from subscriber_id
+rest_server.param 'subscriber_id', (req, res, next, id) ->
+  try
+    req.subscriber = new Subscriber(redis, req.params.subscriber_id)
+    delete req.params.subscriber_id
+    next()
+  catch error
+    res.json error: error.message, 400
+# set up event instance from event_id
+rest_server.param 'event_id', (req, res, next, id) ->
+    try
+        req.event = getEventFromId(req.application.id, req.params.event_id)
         delete req.params.event_id
         next()
     catch error
         res.json error: error.message, 400
 
-authorize = (realm) ->
-    # TODO enable oauth 2.0 ? app key/secret?
-    if settings.server?.auth?
-        return (req, res, next) ->
-            # req.user has been set by express.basicAuth
-            logger.verbose "Authenticating #{req.user} for #{realm}"
-            if not req.user?
-                logger.error "User not authenticated"
-                res.json error: 'Unauthorized', 403
-                return
 
-            allowedRealms = settings.server.auth[req.user]?.realms or []
-            if realm not in allowedRealms
-                logger.error "No access to #{realm} for #{req.user}, allowed: #{allowedRealms}"
-                res.json error: 'Unauthorized', 403
-                return
-
-            next()
-    else if allow_from = settings.server?.acl?[realm]
-        networks = []
-        for network in allow_from
-            networks.push new Netmask(network)
-        return (req, res, next) ->
-            if remoteAddr = req.socket and (req.socket.remoteAddress or (req.socket.socket and req.socket.socket.remoteAddress))
-                for network in networks
-                    if network.contains(remoteAddr)
-                        next()
-                        return
-            res.json error: 'Unauthorized', 403
-    else
-        return (req, res, next) -> next()
 
 createAndSubscribe = (subscriber, e, option, option) ->
     pushServices.createEvent(subscriber, e, option)
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher, createAndSubscribe)
+require('./lib/api').setupRestApi(rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe)
 if eventSourceEnabled
-    require('./lib/eventsource').setup(app, authorize, eventPublisher)
+    require('./lib/eventsource').setup(rest_server, eventPublisher)
 
 port = settings?.server?.tcp_port ? 80
-app.listen port
+rest_server.listen port
 logger.info "Listening on tcp port #{port}"
-
-
-# UDP Event API
-# udpApi = dgram.createSocket("udp4")
-
-# event_route = /^\/event\/([a-zA-Z0-9:._-]{1,100})$/
-# udpApi.checkaccess = authorize('publish')
-# udpApi.on 'message', (msg, rinfo) ->
-#     zlib.unzip msg, (err, msg) =>
-#         if err or not msg.toString()
-#             logger.error("UDP Cannot decode message: #{err}")
-#             return
-#         [method, msg] = msg.toString().split(/\s+/, 2)
-#         if not msg then [msg, method] = [method, 'POST']
-#         req = url.parse(msg ? '', true)
-#         method = method.toUpperCase()
-#         # emulate an express route middleware call
-#         @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.info("UDP/#{method} #{req.pathname} 403")}, ->
-#             status = 404
-#             if m = req.pathname?.match(event_route)
-#                 try
-#                     event = new Event(redis, m[1])
-#                     status = 204
-#                     switch method
-#                         when 'POST' then eventPublisher.publish(event, req.query)
-#                         when 'DELETE' then event.delete()
-#                         else status = 404
-#                 catch error
-#                     logger.error(error.stack)
-#                     return
-#             logger.info("UDP/#{method} #{req.pathname} #{status}") if settings.server?.access_log
-
-# port = settings?.server?.udp_port
-# if port?
-#     udpApi.bind port
-#     logger.info "Listening on udp port #{port}"

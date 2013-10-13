@@ -6,13 +6,13 @@ policyFile = '<?xml version="1.0"?>' +
              '<allow-http-request-headers-from domain="*" headers="Accept"/>' +
              '</cross-domain-policy>'
 
-exports.setup = (app, authorize, eventPublisher) ->
+exports.setup = (app, eventPublisher) ->
     # In order to support access from flash apps
     app.get '/crossdomain.xml', (req, res) ->
         res.set 'Content-Type', 'application/xml'
         res.send(policyFile)
 
-    app.options '/subscribe', authorize('listen'), (req, res) ->
+    app.options '/subscribe', (req, res) ->
         res.set
             'Content-Type': 'text/event-stream',
             'Access-Control-Allow-Origin': '*',
@@ -20,7 +20,7 @@ exports.setup = (app, authorize, eventPublisher) ->
             'Access-Control-Max-Age': '86400'
         res.end()
 
-    app.get '/subscribe', authorize('listen'), (req, res) ->
+    app.get '/subscribe', (req, res) ->
         unless req.accepts('text/event-stream')
             res.send 406
             return

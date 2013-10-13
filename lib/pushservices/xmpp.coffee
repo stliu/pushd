@@ -19,10 +19,12 @@ class PushServiceXMPP
         @handler.setup()
 
         eventPublisher.on 'publish_event', (event, playload) =>
-            @logger.verbose "publishing event #{event.key} from xmpp with payload:"
+            nodeName = "/#{event.applicationKey}/#{event.name}"
+
+            @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
             @logger.verbose sys.inspect playload
             id = rand.generateKey 7
-            publishElement = elements.publish(id, event.name, playload.msg)
+            publishElement = elements.publish(id, nodeName, playload.msg)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement
             @handler.send publishElement
@@ -37,32 +39,36 @@ class PushServiceXMPP
 
 
     createEvent : (subscriber, event, options) ->
+        nodeName = "/#{event.applicationKey}/#{event.name}"
         if event.exists is 1
-            @logger.debug "pubsub node #{event.name} is not existed yet, about to create"
+            @logger.verbose "pubsub node #{nodeName} is not existed yet, about to create"
             id = rand.generateKey 7
-            createNodeElement = elements.create_node(id, event.name)
+            createNodeElement = elements.create_node(id, nodeName)
             @logger.verbose createNodeElement
             @handler.send createNodeElement
         else
             @logger.verbose "event.exist is not 1, then it is #{event.exists}"
-        @logger.verbose "now the pubsub node[#{event.name}] existed, we need to subscribe the subscriber to the node"
+        @logger.verbose "now the pubsub node[#{nodeName}] existed, we need to subscribe the subscriber to the node"
         subscriber.get (info) =>
-            @logger.verbose "pubsub node is #{event.name}, subscriber info is"
+            @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
             @logger.verbose sys.inspect info
             id = rand.generateKey 7
-            subscribeElement = elements.subscribe(id, event.name, "#{info.jid}@ac2")
+            subscribeElement = elements.subscribe(id, nodeName, "#{info.jid}@ac2")
 #            subscribeElement = elements.subscribe(id, event.name, info.jid.toLowerCase())
 
             @logger.verbose subscribeElement
             @handler.send subscribeElement
 
 
-    createSubscriber : (subscriber, fields) =>
+    createSubscriber : (subscriber, fields) ->
         if fields.jid?
             @logger.verbose 'there is already a jid attached, so ignore'
         else
-            jid = subscriber.id
-            password = subscriber.id
+            @logger.verbose "xmpp create subscriber"
+            @logger.verbose sys.inspect fields
+#            jid = fields.appkey +"_"+subscriber.id
+            jid = "#{fields.appkey}_#{subscriber.id}"
+            password = jid
             @logger.verbose "create new user[#{jid}] on xmpp"
             id = rand.generateKey 7
             register = elements.register id, jid, password
