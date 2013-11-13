@@ -138,7 +138,7 @@ class Subscriber
         # TODO handle token update needed for Android
         throw new Error("Can't modify `token` field") if fieldsAndValues.token?
         throw new Error("Can't modify `proto` field") if fieldsAndValues.proto?
-        throw new Error("Can't modify `appkey` field") if fieldsAndValues.appkey?
+#        throw new Error("Can't modify `appkey` field") if fieldsAndValues.appkey?
 #        throw new Error("Can't modify `jid` field") if fieldsAndValues.jid?
         fieldsAndValues.updated = Math.round(new Date().getTime() / 1000)
         @redis.multi()
