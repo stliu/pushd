@@ -8,10 +8,11 @@ import base64
 import random
 from multiprocessing import Process
 
-PUSHD_SERVER = 'http://admin:admin@localhost:5000'
-PUSHD_SERVER_WITHOUT_AUTH = 'http://localhost:5000'
+PUSHD_SERVER = 'http://admin:admin@localhost:7874'
+PUSHD_SERVER_WITHOUT_AUTH = 'http://localhost:7874'
 PUSHD_AUTHORIZATION = 'Basic %s' % base64.encodestring('admin:admin')
 TOKEN_HTTP = 'http://localhost:5001/log'
+
 
 class RepeatingMessage:
     def __init__(self, event, messagesPerMinute):
@@ -20,7 +21,8 @@ class RepeatingMessage:
         self.pushCount = 0
 
     def push(self):
-        print 'Pushing message to ' + self.event
+
+            # print 'Pushing message to ' + self.event
         self.pushCount += 1
         msg = self.generate_message()
         urllib.urlopen(PUSHD_SERVER + '/event/' + self.event, msg).read()
@@ -45,24 +47,24 @@ class Subscriber:
         self.registerSubscriber()
 
     def registerSubscriber(self):
-        print 'Registering subscriber %s' % self.token
+        # print 'Registering subscriber %s' % self.token
         data = 'proto=%s&token=%s&lang=fi&badge=0' % (self.proto, self.token)
         response = urllib.urlopen(PUSHD_SERVER + '/subscribers', data).read()
         parsedResponse = json.loads(response)
-        print parsedResponse
+        # print parsedResponse
         if 'id' not in parsedResponse:
             raise RuntimeError('No id in the reponse')
         self.subscriberId = parsedResponse['id']
 
     def subscribe(self, event):
-        print 'User (token %s) subscribing to %s' % (self.token, event)
+        # print 'User (token %s) subscribing to %s' % (self.token, event)
         url = PUSHD_SERVER + '/subscriber/%s/subscriptions/%s' % \
             (self.subscriberId, event)
         data = 'ignore_message=0'
         urllib.urlopen(url, data).read()
 
     def unregister(self):
-        print 'Unregistering user %s' % self.token
+        # print 'Unregistering user %s' % self.token
         url = PUSHD_SERVER_WITHOUT_AUTH + '/subscriber/%s' % self.subscriberId
         request = urllib2.Request(url, data='')
         request.add_header('Authorization', PUSHD_AUTHORIZATION)
@@ -108,10 +110,10 @@ def startPushProcesses(targets):
 
 def settings():
     # events and notification frequencies
-    push_targets = [RepeatingMessage('performancetest1', 200),
-                   RepeatingMessage('performancetest2', 1000)]
-    subscribers = [generateRandomHTTPSubscribers(push_targets[0].event, 10000),
-                  generateRandomHTTPSubscribers(push_targets[1].event, 500)]
+    push_targets = [RepeatingMessage('performancetest1', 30),
+                   RepeatingMessage('performancetest2', 30)]
+    subscribers = [generateRandomHTTPSubscribers(push_targets[0].event, 50000),
+                  generateRandomHTTPSubscribers(push_targets[1].event, 50000)]
     return push_targets, subscribers
 
 def main():

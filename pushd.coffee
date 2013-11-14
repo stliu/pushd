@@ -92,6 +92,7 @@ rest_server.all '*', (req, res, next) ->
 #        if req.header.appkey?
         appkey = req.get('appkey' )
         throw new Error("missing app key in request header") if not appkey?
+        # appkey = "performance-app"
         logger.verbose("------------------- " + appkey)
         req.application = getAppFromKey(appkey)
         next()
