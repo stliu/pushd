@@ -248,6 +248,7 @@ class Subscriber
                     cb(null) if cb # null if subscriber doesn't exist
 
     removeSubscription: (event, cb) ->
+        logger.verbose "#{@key}:evts -- #{@id} -- #{event.fullkey}"
         @redis.multi()
             # check subscriber existance
             .zscore("subscribers", @id)

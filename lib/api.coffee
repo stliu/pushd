@@ -147,7 +147,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, testSubscriber, e
 
     # Unsubscribe a subscriber from an event
     app.delete '/subscriber/:subscriber_id/subscriptions/:event_id', (req, res) ->
-        req.subscriber.removeSubscription req.event, (deleted) ->
+        req.subscriber.removeSubscription req.event, (err,deleted) ->
             if not deleted?
                 logger.error "No subscriber #{req.subscriber.id}"
             else if not deleted
