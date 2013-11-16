@@ -5,10 +5,11 @@ class Event
     OPTION_IGNORE_MESSAGE: 1
     name_format: /^[a-zA-Z0-9:._-]{1,100}$/
 
-    constructor: (@redis,@applicationKey, @name) ->
+    constructor: (@redis,@applicationKey) ->
         throw new Error("Missing redis connection") if not redis?
         throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name
-        @fullkey = "#{@applicationKey}:#{@name}"
+        @fullkey = "#{@applicationKey}"
+        @name = @fullkey
         @eventkey = "event:#{@fullkey}"
         logger.verbose "new event #{@fullkey} constructor"
     
