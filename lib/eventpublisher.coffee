@@ -23,18 +23,18 @@ class EventPublisher extends events.EventEmitter
                 cb(0) if cb
                 return
 
-            try
-                # Do not compile templates before to know there's some subscribers for the event
-                # and do not start serving subscribers if payload won't compile
-                payload.compile()
-            catch e
-                logger.error "Invalid payload, template doesn't compile"
-                cb(-1) if cb
-                return
+#            try
+#                # Do not compile templates before to know there's some subscribers for the event
+#                # and do not start serving subscribers if payload won't compile
+#                payload.compile()
+#            catch e
+#                logger.error "Invalid payload, template doesn't compile"
+#                cb(-1) if cb
+#                return
 
             logger.verbose "Pushing message for event #{event.name}"
-            logger.silly 'Title: ' + payload.localizedTitle('en')
-            logger.silly payload.localizedMessage('en')
+            logger.silly 'Title: ' + payload.title
+            logger.silly payload.msg
 
             protoCounts = {}
             action = (subscriber, subOptions, done) =>
