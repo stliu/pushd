@@ -1,5 +1,5 @@
 apns = require 'apn'
-
+logger = require 'winston'
 class PushServiceAPNS
     tokenFormat: /^[0-9a-f]{64}$/i
     validateToken: (token) ->
@@ -27,6 +27,7 @@ class PushServiceAPNS
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
             note = new apns.Notification()
+
             device = new apns.Device(info.token)
             device.subscriberId = subscriber.id # used for error logging
             if subOptions?.ignore_message isnt true and alert = payload.localizedMessage(info.lang)
@@ -38,6 +39,7 @@ class PushServiceAPNS
                     note.payload[key] = val if key in @payloadFilter
             else
                 note.payload = payload.data
+            logger.verbose "pushing message #{note.payload} to device #{subscriber.id}"
             @driver.pushNotification note, device
             # On iOS we have to maintain the badge counter on the server
             subscriber.incr 'badge'
