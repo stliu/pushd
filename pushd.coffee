@@ -78,7 +78,7 @@ rest_server.configure ->
 
 
 getEventFromId = (appkey, id) ->
-    return new Event(redis,appkey, id)
+    return new Event(redis,"#{appkey}:#{id}")
 
 testSubscriber = (subscriber) ->
     pushServices.push(subscriber, null, new Payload({msg: "Test", "data.test": "ok"}))

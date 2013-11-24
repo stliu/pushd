@@ -5,13 +5,11 @@ class Event
     OPTION_IGNORE_MESSAGE: 1
     name_format: /^[a-zA-Z0-9:._-]{1,100}$/
 
-    constructor: (@redis,@applicationKey) ->
+    constructor: (@redis,@name) ->
         throw new Error("Missing redis connection") if not redis?
         throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name
-        @fullkey = "#{@applicationKey}"
-        @name = @fullkey
-        @eventkey = "event:#{@fullkey}"
-        logger.verbose "new event #{@fullkey} constructor"
+        @eventkey = "event:#{@name}"
+        logger.verbose "new event #{@name} constructor"
     
     # get the info of this event, including how many subscriptions and all of other event keys/values
     info: (cb) ->
@@ -23,7 +21,7 @@ class Event
             .zcard("#{@eventkey}:subs")
             .exec (err, results) =>
                 if (f for own f of results[0]).length
-                    info = {total: results[1]}
+                    info = {"total-subscribers": results[1]}
                     # transform numeric value to number type
                     for own key, value of results[0]
                         num = parseInt(value)
@@ -37,14 +35,14 @@ class Event
         if @name is 'broadcast'
             cb(true)
         else
-            @redis.sismember "events", @fullkey, (err, exists) =>
+            @redis.sismember "events", @name, (err, exists) =>
                 cb(exists)
     # delete this event from DB
     # first, we need to unsubscribe from this event ( it's stored in the 'subscribers:@id:evts')
     # then delete the key of this event 'event:@event_name'
     # finally, remove this event name from 'events'
     delete: (cb) ->
-        logger.verbose "Deleting event #{@fullkey}"
+        logger.verbose "Deleting event #{@name}"
 
         subscriberCount = 0
         @forEachSubscribers (subscriber, subOptions, done) =>
@@ -53,12 +51,12 @@ class Event
             subscriberCount += 1
         , (total, ek)=>
             # finished
-            logger.verbose "Unsubscribed #{subscriberCount} subscribers from #{@fullkey}"
+            logger.verbose "Unsubscribed #{subscriberCount} subscribers from #{@name}"
             @redis.multi()
                 # delete event's info hash
                 .del(ek)
                 # remove event from global event list
-                .srem("events", @fullkey)
+                .srem("events", @name)
                 .exec (err, results) ->
                     cb(results[1] > 0) if cb
 
