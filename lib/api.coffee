@@ -168,6 +168,10 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, testSubscriber, e
         res.send 204
         eventPublisher.publish(req.event, req.body)
 
+    app.post '/send/:subscriber_id', (req, res) ->
+        res.send 204
+        eventPublisher.send(req.subscriber, req.body)
+
     # Delete an event
     app.delete '/event/:event_id', (req, res) ->
         req.event.delete (deleted) ->

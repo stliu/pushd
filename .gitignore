@@ -1,5 +1,8 @@
 node_modules/
 settings.coffee
+settings.js
+lib/*.js
+lib/**/*.js
 *.pem
 *.swp
 .idea
