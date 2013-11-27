@@ -6,11 +6,6 @@ class PushServices
     createEvent: (subscriber, event, options) ->
         subscriber.get (info) =>
           if info then @services[info.proto]?.createEvent?(subscriber, event, options)
-#          cb() if cb
-#        for own protocol, service of @services
-#            service.createEvent? subscriber, event, options
-#            if service.createEvent?
-#                service.createEvent subscriber, event, options
 
     addService: (protocol, service) ->
         @services[protocol] = service
@@ -22,7 +17,5 @@ class PushServices
         subscriber.get (info) =>
             if info then @services[info.proto]?.push(subscriber, subOptions, payload)
             cb() if cb
-
-
 
 exports.PushServices = PushServices

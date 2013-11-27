@@ -61,7 +61,6 @@ checkUserAndPassword = (username, password) =>
     return false
 
 rest_server = express()
-
 rest_server.configure ->
     rest_server.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
     rest_server.use(express.logger('[:date] :remote-addr :method :url :status :response-time')) if settings.server?.access_log
@@ -71,10 +70,16 @@ rest_server.configure ->
     rest_server.enable('trust proxy')
     rest_server.disable('x-powered-by');
     rest_server.use(express.responseTime())
-#    rest_server.use(App::auth())
 
+getSubscriber = (appkey, subscriber_id) ->
+    return new Subscriber(redis, subscriber_id)
 
-
+getSubscriberFromJid = (appkey, jid, cb) ->
+    redis.get "jid:#{jid}", (err, subscriber_id) ->
+        if not subscriber_id? or err?
+            return cb(null)
+        subscriber = getSubscriber(appkey, subscriber_id)
+        cb(subscriber)
 
 
 getEventFromId = (appkey, id) ->
@@ -89,23 +94,23 @@ getAppFromKey = (id) ->
 
 rest_server.all '*', (req, res, next) ->
     try
-#        if req.header.appkey?
         appkey = req.get('appkey' )
         throw new Error("missing app key in request header") if not appkey?
-        # appkey = "performance-app"
         logger.verbose("------------------- " + appkey)
         req.application = getAppFromKey(appkey)
         next()
     catch error
         res.json error: error.message, 400
+
 # set up subscriber instance from subscriber_id
 rest_server.param 'subscriber_id', (req, res, next, id) ->
   try
-    req.subscriber = new Subscriber(redis, req.params.subscriber_id)
+    req.subscriber = getSubscriber(req.application.id, req.params.subscriber_id)
     delete req.params.subscriber_id
     next()
   catch error
     res.json error: error.message, 400
+
 # set up event instance from event_id
 rest_server.param 'event_id', (req, res, next, id) ->
     try
@@ -115,12 +120,23 @@ rest_server.param 'event_id', (req, res, next, id) ->
     catch error
         res.json error: error.message, 400
 
-
+rest_server.param 'jid', (req, res, next, id) ->
+    try
+        getSubscriberFromJid req.application.id, req.params.jid, (subscriber)->
+            if not subscriber?
+                return res.json error: "can't find subscriber from jid[#{req.params.jid}]", 400
+            req.subscriber = subscriber
+            delete req.params.jid
+            next()
+    catch error
+        logger.error("run into error: " + error.message)
+        res.json error: error.message, 400
 
 createAndSubscribe = (subscriber, e, option, option) ->
     pushServices.createEvent(subscriber, e, option)
 
 require('./lib/api').setupRestApi(rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe)
+
 if eventSourceEnabled
     require('./lib/eventsource').setup(rest_server, eventPublisher)
 
