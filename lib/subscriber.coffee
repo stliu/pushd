@@ -212,7 +212,7 @@ class Subscriber
             # check subscriber existance
             # Get the score associated with the given member in a sorted set
             # @id here is device id
-            .zscore("subscribers", @id) 
+            .zscore("subscribers", @id)
             # add event to subscriber's subscriptions list
             # @key is 'subscribers'
             .zadd("#{@key}:evts", options, event.name)
