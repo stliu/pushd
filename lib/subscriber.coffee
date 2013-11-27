@@ -57,14 +57,18 @@ class Subscriber
                                     return Subscriber::create(redis, fields, cb, tentatives + 1)
                             else
                                 fields.created = fields.updated = Math.round(new Date().getTime() / 1000)
-                                redis.multi()
+                                multi = redis.multi()
+                                if fields.jiduser?
+                                    multi.set("jid:#{fields.jiduser}", id)
+                                    delete fields.jiduser
                                     # register subscriber token to db id
-                                    .hsetnx("tokenmap", "#{fields.proto}:#{fields.token}", id)
+                                multi.hsetnx("tokenmap", "#{fields.proto}:#{fields.token}", id)
                                     # register subscriber to global list
                                     .zadd("subscribers", 0, id)
                                     # save fields
                                     .hmset("subscriber:#{id}", fields)
-                                    .exec (err, results) =>
+
+                                multi.exec (err, results) =>
                                         if results is null
                                             # Transction discarded due to a parallel creation of the watched subscriber key
                                             # Try again in order to get the peer created subscriber
@@ -76,7 +80,7 @@ class Subscriber
                                                 return Subscriber::create(redis, fields, cb, tentatives + 1)
                                         else
                                             # done
-                                            cb(new Subscriber(redis, id), created=true, tentatives)
+                                            cb(new Subscriber(redis, id), created=true, tentatives)    
 
     constructor: (@redis, @id) ->
         @info = null
