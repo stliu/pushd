@@ -36,7 +36,10 @@ class PushServiceAPNS
             note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
             note.sound = payload.sound
             note.payload = payload.data
-            logger.verbose "pushing message [#{util.inspect(note.payload)}] with alert [#{util.inspect(note.alert)}] to device #{subscriber.id}"
+            if payload.msg?
+                note.payload.msg = payload.msg
+
+            logger.verbose "pushing message [#{note.payload.msg}] with alert [#{util.inspect(note.alert)}] and data[#{util.inspect(note.payload)}] to device #{subscriber.id}"
             @driver.pushNotification note, device
             # On iOS we have to maintain the badge counter on the server
             subscriber.incr 'badge'
