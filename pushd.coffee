@@ -126,6 +126,7 @@ rest_server.param 'jid', (req, res, next, id) ->
             if not subscriber?
                 return res.json error: "can't find subscriber from jid[#{req.params.jid}]", 400
             req.subscriber = subscriber
+            logger.verbose "found subscriber[#{subscriber.id}] by jid[#{req.params.jid}]"
             delete req.params.jid
             next()
     catch error

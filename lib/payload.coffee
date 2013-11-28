@@ -1,8 +1,11 @@
 serial = 0
+logger = require 'winston'
+util = require 'util'
 
 class Payload
     constructor: (data) ->
         throw new Error('Invalid payload') unless typeof data is 'object'
+        logger.verbose "get payload data: #{util.inspect(data)}"
         @id = serial++
         # Read fields
         for own key, value of data

@@ -8,35 +8,12 @@ class EventPublisher extends events.EventEmitter
     send: (subscriber, data, cb) ->
         try
             payload = new Payload(data)
-#            payload.event = event
+            @pushServices.push(subscriber, {}, payload)
         catch e
-        # Invalid payload (empty, missing key or invalid key format)
             logger.error 'Invalid payload ' + e
             cb(-1) if cb
             return
 
-#        protoCounts = {}
-#        subscriber.get (info) =>
-#            if info?.proto?
-#                if protoCounts[info.proto]?
-#                    protoCounts[info.proto] += 1
-#                else
-#                    protoCounts[info.proto] = 1
-
-        @pushServices.push(subscriber, {}, payload)
-        # finished
-#        logger.verbose "Pushed to #{totalSubscribers} subscribers"
-#        for proto, count of protoCounts
-#            logger.verbose "#{count} #{proto} subscribers"
-#
-#        if totalSubscribers > 0
-#            # update some event' stats
-#            event.log =>
-#                cb(totalSubscribers) if cb
-#        else
-#            # if there is no subscriber, cleanup the event
-#            event.delete =>
-#                cb(0) if cb
 
     publish: (event, data, cb) ->
         try
