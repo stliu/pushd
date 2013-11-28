@@ -38,8 +38,7 @@ class PushServiceAPNS
             note.payload = payload.data
             if payload.msg?
                 note.payload.msg = payload.msg
-
-            logger.verbose "pushing message [#{note.payload.msg}] with alert [#{util.inspect(note.alert)}] and data[#{util.inspect(note.payload)}] to device #{subscriber.id}"
+            logger.verbose "pushing alert [#{util.inspect(note.alert)}] and data[#{util.inspect(note.payload)}] to device #{subscriber.id}"
             @driver.pushNotification note, device
             # On iOS we have to maintain the badge counter on the server
             subscriber.incr 'badge'
