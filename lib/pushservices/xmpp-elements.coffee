@@ -1,9 +1,9 @@
 xmpp = require 'node-xmpp'
 
-exports.register = (id, jid, password) ->
-    return new xmpp.Element('iq', {id:id, to:'ac2', type:'set'})
+exports.register = (id, jid, password, hostname='ac2') ->
+    return new xmpp.Element('iq', {id:id, to:hostname, type:'set'})
     .c('query', {xmlns:'jabber:iq:register'})
-    .c('username').t(jid)
+    .c('username').t("#{jid}")
     .up()
     .c('password').t(password)
     .up()
@@ -16,10 +16,10 @@ exports.register = (id, jid, password) ->
 exports.presence = () ->
   return new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy')
 
-exports.publish = (id, node, message) ->
+exports.publish = (id, node, message, hostname="ac2") ->
     return new xmpp.Element('iq', {
         id: id,
-        to: 'pubsub.ac2',
+        to: "pubsub.#{hostname}",
         type: 'set'
     }).c('pubsub', {
         xmlns: 'http://jabber.org/protocol/pubsub'
@@ -29,12 +29,12 @@ exports.publish = (id, node, message) ->
         xmlns: 'easemob:pubsub'
     }).t(message).root()
 
-exports.subscribe = (id, node, jid) ->
+exports.subscribe = (id, node, jid, hostname="ac2") ->
   return new xmpp.Element('iq', {
     id: id,
-    to: 'pubsub.ac2',
+    to: "pubsub.#{hostname}",
     type: 'set',
-    from: 'admin@ac2'
+    from: "admin@#{hostname}"
   } ).c('pubsub', {
     xmlns: 'http://jabber.org/protocol/pubsub#owner'
   }).c('subscriptions', {
@@ -55,10 +55,10 @@ exports.subscribe = (id, node, jid) ->
 #        jid: jid
 #    }).root()
 
-exports.create_node = (id, node_name) ->
+exports.create_node = (id, node_name, hostname="ac2") ->
     return new xmpp.Element('iq', {
         id: id,
-        to: 'pubsub.ac2',
+        to: "pubsub.#{hostname}",
         type: 'set'
     }).c('pubsub', {
         xmlns: 'http://jabber.org/protocol/pubsub'

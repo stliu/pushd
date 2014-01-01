@@ -1,7 +1,6 @@
 node_modules/
-settings.coffee
-settings.js
 lib/*.js
+settings.js
 lib/**/*.js
 *.pem
 *.swp
