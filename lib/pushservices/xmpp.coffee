@@ -66,16 +66,16 @@ class PushServiceXMPP
         else
             @logger.verbose "xmpp create subscriber"
             @logger.verbose sys.inspect fields
-#            jid = fields.appkey +"_"+subscriber.id
-            jid = "#{fields.appkey}_#{subscriber.id}"
-            password = jid
+            bare_jid = "#{fields.appkey}_#{subscriber.id}"
+            jid = "#{bare_jid}@#{@hostname}"
+            password = bare_jid
             @logger.verbose "create new user[#{jid}] on xmpp"
             id = rand.generateKey 7
             register = elements.register id, jid, password, @hostname
             @logger.verbose "the xml is:"
             @logger.verbose register
             @handler.send register
-            subscriber.set({jid: jid})
+            subscriber.set({jid: jid, password: password})
         
 
 
