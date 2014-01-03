@@ -20,7 +20,7 @@ class PushServiceXMPP
         @handler.setup()
 
         eventPublisher.on 'publish_event', (event, playload) =>
-            nodeName = "/#{event.applicationKey}/#{event.name}"
+            nodeName = "#{event.name}"
 
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
             @logger.verbose sys.inspect playload
