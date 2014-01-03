@@ -75,7 +75,7 @@ class PushServiceXMPP
             @logger.verbose "the xml is:"
             @logger.verbose register
             @handler.send register
-            subscriber.set({jid: jid, password: password})
+            subscriber.set({jid: jid, password: password, xmpp_server: @host, xmpp_domain: @hostname})
         
 
 
