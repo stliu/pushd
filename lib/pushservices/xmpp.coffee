@@ -71,7 +71,7 @@ class PushServiceXMPP
             password = bare_jid
             @logger.verbose "create new user[#{jid}] on xmpp"
             id = rand.generateKey 7
-            register = elements.register id, jid, password, @hostname
+            register = elements.register id, bare_jid, password, @hostname
             @logger.verbose "the xml is:"
             @logger.verbose register
             @handler.send register
