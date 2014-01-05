@@ -84,6 +84,10 @@ exports.create_node = (id, node_name, hostname="ac2") ->
     }).c('value').t('1')
         .up().up()
         .c('field', {
+          'var': 'pubsub#persist_items', type: 'boolean'
+          }).c('value').t('0')
+          .up().up()    
+        .c('field', {
         'var': 'pubsub#access_model', type: 'list-single'
     }).c('value').t('open')
         .up().up()
