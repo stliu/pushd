@@ -39,7 +39,7 @@ tokenResolver = (proto, token, cb) ->
 
 eventSourceEnabled = no
 pushServices = new PushServices()
-eventPublisher = new EventPublisher(pushServices)
+eventPublisher = new EventPublisher(pushServices, logger)
 
 for name, conf of settings when conf.enabled
     logger.info "Registering push service: #{name}"

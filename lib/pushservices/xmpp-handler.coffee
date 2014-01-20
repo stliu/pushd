@@ -43,22 +43,22 @@ class Handler
   ping : (stanza) ->
     if stanza.attrs.xmlns is 'urn:xmpp:ping'
       stanza = stanza.up()
-      logger.verbose( 'got ping from server, now we need to response')
+      # logger.verbose( 'got ping from server, now we need to response')
       from = stanza.attrs.to
       to = stanza.attrs.from
       stanza.remove('ping', 'urn:xmpp:ping')
       stanza.attrs.to = to
       stanza.attrs.from = from
       stanza.attrs.type = 'result'
-      logger.verbose( 'response xml is' )
-      logger.verbose stanza
+      # logger.verbose( 'response xml is' )
+      # logger.verbose stanza
       @client.send stanza
     else
       logger.verbose "got `ping` message but the xmlns[#{stanza.attrs.xmlns}] is not expected"
 
   presence : (stanza) ->
-    logger.verbose "got the `presence` response:"
-    logger.verbose stanza
+    # logger.verbose "got the `presence` response:"
+    # logger.verbose stanza
 
   next : (stanza) =>
     m = stanza.name

@@ -7,8 +7,8 @@ rand = require "generate-key"
 class PushServiceXMPP
     tokenFormat: /^[0-9a-f]{8}$/i
     validateToken: (token) ->
-        if PushServiceXMPP::tokenFormat.test(token)
-            return token.toLowerCase()
+        # if PushServiceXMPP::tokenFormat.test(token)
+        return token.toLowerCase()
 
     constructor: (conf, @logger, tokenResolver, eventPublisher) ->
         conf.errorCallback = (errCode, note, device) =>
