@@ -60,7 +60,7 @@ class Subscriber
                                 multi = redis.multi()
                                 if fields.jiduser?
                                     multi.set("jid:#{fields.jiduser}", id)
-                                    delete fields.jiduser
+#                                    delete fields.jiduser
                                     # register subscriber token to db id
                                 multi.hsetnx("tokenmap", "#{fields.proto}:#{fields.token}", id)
                                     # register subscriber to global list
@@ -90,11 +90,11 @@ class Subscriber
     delete: (cb) ->
         @redis.multi()
             # get subscriber's token
-            .hmget(@key, 'proto', 'token')
+            .hmget(@key, 'proto', 'token', 'jiduser')
             # gather subscriptions
             .zrange("subscriber:#{@id}:evts", 0, -1)
             .exec (err, results) =>
-                [proto, token] = results[0]
+                [proto, token, jiduser] = results[0]
                 events = results[1]
                 multi = @redis.multi()
                     # remove from subscriber token to id map
@@ -105,7 +105,8 @@ class Subscriber
                     .del(@key)
                     # remove subscription list
                     .del("#{@key}:evts")
-
+                if jiduser?
+                    multi.del("jid:#{jiduser}")
                 # unsubscribe subscriber from all subscribed events
                 for eventName in events
                     multi.zrem("event:#{eventName}:subs", @id)
@@ -145,12 +146,18 @@ class Subscriber
 #        throw new Error("Can't modify `appkey` field") if fieldsAndValues.appkey?
 #        throw new Error("Can't modify `jid` field") if fieldsAndValues.jid?
         fieldsAndValues.updated = Math.round(new Date().getTime() / 1000)
-        @redis.multi()
+#      multi.set("jid:#{fields.jiduser}", id)
+        multi = @redis.multi()
             # check subscriber existance
-            .zscore("subscribers", @id)
+        multi.zscore("subscribers", @id)
             # edit fields
             .hmset(@key, fieldsAndValues)
-            .exec (err, results) =>
+
+#        update jid: key
+        if fieldsAndValues.jiduser?
+            multi.set("jid:#{fieldsAndValues.jiduser}", @id)
+
+        multi.exec (err, results) =>
                 @info = null # flush cache
                 if results[0]? # subscriber exists?
                     cb(true) if cb
