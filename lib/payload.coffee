@@ -7,6 +7,7 @@ class Payload
         throw new Error('Invalid payload') unless typeof data is 'object'
         logger.verbose "get payload data: #{util.inspect(data)}"
         @id = serial++
+        @sound = 'default'
         # Read fields
         for own key, value of data
             if typeof key isnt 'string' or key.length == 0

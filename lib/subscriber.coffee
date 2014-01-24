@@ -10,18 +10,21 @@ class Subscriber
         throw new Error("Missing redis connection") if not redis?
         throw new Error("Missing mandatory `proto' field") if not proto?
         throw new Error("Missing mandatory `token' field") if not token?
-
+        logger.verbose "############################  getInstanceFromToken using proto[#{proto}] and token[#{token}] "
         redis.hget "tokenmap", "#{proto}:#{token}", (err, id) =>
             if id?
+                logger.verbose "######################## found id[#{id}]"
                 # looks like this subscriber is already registered
                 redis.exists "subscriber:#{id}", (err, exists) =>
                     if exists
+                        logger.verbose "################ subscriber:#{id} exist"
                         cb(new Subscriber(redis, id))
                     else
                         # duh!? the global list reference an unexisting object, fix this inconsistency and return no subscriber
                         redis.hdel "tokenmap", "#{proto}:#{token}", =>
                             cb(null)
             else
+                logger.verbose "########################## can't find the push id"
                 cb(null) # No subscriber for this token
 
     create: (redis, fields, cb, tentatives=0) ->
@@ -38,12 +41,15 @@ class Subscriber
         # verify if token is already registered
         Subscriber::getInstanceFromToken redis, fields.proto, fields.token, (subscriber) =>
             if subscriber?
+                logger.verbose "--------- found the subscriber, now update subscriber info"
                 # this subscriber is already registered
                 delete fields.token
                 delete fields.proto
+                logger.verbose(fields)
                 subscriber.set fields, =>
                     cb(subscriber, created=false, tentatives)
             else
+                logger.verbose("------------ generating a new subscriber")
                 # register the subscriber using a randomly generated id
                 crypto.randomBytes 8, (ex, buf) =>
                     # generate a base64url random uniq id
