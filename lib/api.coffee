@@ -185,3 +185,11 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, testSubscriber, e
                 res.send 204
             else
                 res.send 404
+
+    app.get '/id/:gen_key', (req, res) ->
+        req.generator.gen (err, value)->
+            if err
+                res.json err, 400
+            else
+                res.json value, 200
+

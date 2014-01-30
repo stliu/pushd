@@ -11,6 +11,7 @@ Event = require('./lib/event').Event
 Application = require('./lib/app').App
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
+Generator = require('./lib/idgenerator').Generator
 logger = require 'winston'
 sys = require 'sys'
 
@@ -116,6 +117,15 @@ rest_server.param 'event_id', (req, res, next, id) ->
     try
         req.event = getEventFromId(req.application.id, req.params.event_id)
         delete req.params.event_id
+        next()
+    catch error
+        res.json error: error.message, 400
+
+rest_server.param 'gen_key', (req, res, next, id) ->
+    try
+
+        req.generator = new Generator(redis, "generator:#{req.params.gen_key}")
+        delete req.params.gen_key
         next()
     catch error
         res.json error: error.message, 400
