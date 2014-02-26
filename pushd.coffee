@@ -27,7 +27,6 @@ createSubscriber = (fields, cb) ->
     throw new Error("Invalid value for `proto:#{fields.proto}'") unless service = pushServices.getService(fields.proto)
     throw new Error("Invalid value for `token:#{fields.token}'") unless fields.token = service.validateToken(fields.token)
     logger.verbose "-------------- create subscriber: app key: " + fields.appkey
-    # Subscriber::create(redis, fields, cb)
     Subscriber::create redis, fields, (subscriber, created, tentatives) =>
         logger.verbose "-------------- subscriber.create: app key: " + fields.appkey
         # give push services a chance
@@ -123,7 +122,6 @@ rest_server.param 'event_id', (req, res, next, id) ->
 
 rest_server.param 'gen_key', (req, res, next, id) ->
     try
-
         req.generator = new Generator(redis, "generator:#{req.params.gen_key}")
         delete req.params.gen_key
         next()
@@ -143,7 +141,7 @@ rest_server.param 'jid', (req, res, next, id) ->
         logger.error("run into error: " + error.message)
         res.json error: error.message, 400
 
-createAndSubscribe = (subscriber, e, option, option) ->
+createAndSubscribe = (subscriber, e, option) ->
     pushServices.createEvent(subscriber, e, option)
 
 require('./lib/api').setupRestApi(rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe)

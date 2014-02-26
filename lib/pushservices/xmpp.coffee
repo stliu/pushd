@@ -61,7 +61,7 @@ class PushServiceXMPP
 
 
     createSubscriber : (subscriber, fields) ->
-        if fields.jid?
+        if fields.jiduser?
             @logger.verbose 'there is already a jid attached, so ignore'
         else
             @logger.verbose "xmpp create subscriber"
