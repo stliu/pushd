@@ -1,10 +1,9 @@
 crypto = require 'crypto'
 async = require 'async'
 Event = require('./event').Event
-logger = require 'winston'
 sys = require 'sys'
 class Subscriber
-    getInstanceFromToken: (redis, proto, token, cb) ->
+    getInstanceFromToken: (logger,redis, proto, token, cb) ->
         return until cb
 
         throw new Error("Missing redis connection") if not redis?
@@ -88,10 +87,10 @@ class Subscriber
                                             # done
                                             cb(new Subscriber(redis, id), created=true, tentatives)    
 
-    constructor: (@redis, @id) ->
+    constructor: (@redis, @id, @logger) ->
         @info = null
         @key = "subscriber:#{@id}"
-        logger.verbose "constructing new subscriber with id #{@id}"
+        @logger.verbose "constructing new subscriber with id #{@id}"
 
     delete: (cb) ->
         @redis.multi()
@@ -224,7 +223,7 @@ class Subscriber
                     cb(null) # null if subscriber doesn't exist
     # add the subscripter to an event
     addSubscription: (event, options, cb) ->
-        logger.verbose "add subscriber[#{@id}] to event[#{event.name}]"
+        @logger.verbose "add subscriber[#{@id}] to event[#{event.name}]"
         @redis.multi()
             # check subscriber existance
             # Get the score associated with the given member in a sorted set
@@ -244,7 +243,7 @@ class Subscriber
                 # 从代码上看是这样的, 可是为啥只判断了这个subscriber的score就认为已经添加了?
                 # 是不是应该是整个multi的返回结果呢, 那么这个results[0]应该是最后一个吧?
                 if results[0]? # subscriber exists?
-                    logger.verbose "Registered subscriber #{@id} to event #{event.name}"
+                    @logger.verbose "Registered subscriber #{@id} to event #{event.name}"
                     event['exists'] = results[4]
                     cb(results[1] is 1, this, event) if cb
                 else
@@ -265,7 +264,7 @@ class Subscriber
                     cb(null) if cb # null if subscriber doesn't exist
 
     removeSubscription: (event, cb) ->
-        logger.verbose "#{@key}:evts -- #{@id} -- #{event.name}"
+        @logger.verbose "#{@key}:evts -- #{@id} -- #{event.name}"
         @redis.multi()
             # check subscriber existance
             .zscore("subscribers", @id)
@@ -281,7 +280,7 @@ class Subscriber
                 if results[0]? # subscriber exists?
                     wasRemoved = results[1] is 1 # true if removed, false if wasn't subscribed
                     if wasRemoved
-                        logger.verbose "Subscriber #{@id} unregistered from event #{event.name}"
+                        @logger.verbose "Subscriber #{@id} unregistered from event #{event.name}"
                     cb(null, wasRemoved) if cb
                 else
                     cb(null) if cb # null if subscriber doesn't exist

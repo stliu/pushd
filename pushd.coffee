@@ -35,7 +35,7 @@ createSubscriber = (fields, cb) ->
         cb subscriber, fields, tentatives
 
 tokenResolver = (proto, token, cb) ->
-    Subscriber::getInstanceFromToken redis, proto, token, cb
+    Subscriber::getInstanceFromToken logger, redis, proto, token, cb
 
 eventSourceEnabled = no
 pushServices = new PushServices()
@@ -72,7 +72,7 @@ rest_server.configure ->
     rest_server.use(express.responseTime())
 
 getSubscriber = (appkey, subscriber_id) ->
-    return new Subscriber(redis, subscriber_id)
+    return new Subscriber(redis, subscriber_id, logger)
 
 getSubscriberFromJid = (appkey, jid, cb) ->
     redis.get "jid:#{jid}", (err, subscriber_id) ->
