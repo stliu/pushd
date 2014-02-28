@@ -19,7 +19,7 @@ class PushServiceXMPP
         @handler.setup()
 
         eventPublisher.on 'publish_event', (event, playload) =>
-            nodeName = "/#{event.applicationKey}/#{event.name}"
+            nodeName = "/#{event.eventkey}"
 
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
             @logger.verbose sys.inspect playload
@@ -39,7 +39,7 @@ class PushServiceXMPP
 
 
     createEvent : (subscriber, event, options) ->
-        nodeName = "/#{event.applicationKey}/#{event.name}"
+        nodeName = "/#{event.eventkey}"
         if event.exists is 1
             @logger.verbose "pubsub node #{nodeName} is not existed yet, about to create"
             id = rand.generateKey 7
