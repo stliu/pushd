@@ -53,7 +53,7 @@ class PushServiceXMPP
             @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
             @logger.verbose sys.inspect info
             id = rand.generateKey 7
-            subscribeElement = elements.subscribe(id, nodeName, "#{info.jid}@ac2")
+            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}")
 #            subscribeElement = elements.subscribe(id, event.name, info.jid.toLowerCase())
 
             @logger.verbose subscribeElement
