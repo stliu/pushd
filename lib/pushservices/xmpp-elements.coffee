@@ -1,7 +1,7 @@
 xmpp = require 'node-xmpp'
 
-exports.register = (id, jid, password) ->
-    return new xmpp.Element('iq', {id:id, to:'ac2', type:'set'})
+exports.register = (id, jid, password, host) ->
+    return new xmpp.Element('iq', {id:id, to:host, type:'set'})
     .c('query', {xmlns:'jabber:iq:register'})
     .c('username').t(jid)
     .up()
@@ -16,10 +16,10 @@ exports.register = (id, jid, password) ->
 exports.presence = () ->
   return new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy')
 
-exports.publish = (id, node, message) ->
+exports.publish = (id, node, message, host) ->
     return new xmpp.Element('iq', {
         id: id,
-        to: 'pubsub.ac2',
+        to: "pubsub.#{host}",
         type: 'set'
     }).c('pubsub', {
         xmlns: 'http://jabber.org/protocol/pubsub'
@@ -29,12 +29,12 @@ exports.publish = (id, node, message) ->
         xmlns: 'easemob:pubsub'
     }).t(message).root()
 
-exports.subscribe = (id, node, jid) ->
+exports.subscribe = (id, node, jid, host) ->
   return new xmpp.Element('iq', {
     id: id,
-    to: 'pubsub.ac2',
+    to: "pubsub.#{host}",
     type: 'set',
-    from: 'admin@ac2'
+    from: "admin@#{host}"
   } ).c('pubsub', {
     xmlns: 'http://jabber.org/protocol/pubsub#owner'
   }).c('subscriptions', {
@@ -42,23 +42,11 @@ exports.subscribe = (id, node, jid) ->
   })
   .c('subscription',{jid: jid, subscription:'subscribed'})
   .root()
-#exports.subscribe = (id, node, jid) ->
-#    return new xmpp.Element('iq', {
-#        id: id,
-#        to: 'pubsub.ac2',
-#        type: 'set',
-#        from: 'admin@ac2'
-#    } ).c('pubsub', {
-#        xmlns: 'http://jabber.org/protocol/pubsub'
-#    }).c('subscribe', {
-#        node: node,
-#        jid: jid
-#    }).root()
 
-exports.create_node = (id, node_name) ->
+exports.create_node = (id, node_name, host) ->
     return new xmpp.Element('iq', {
         id: id,
-        to: 'pubsub.ac2',
+        to: "pubsub.#{host}",
         type: 'set'
     }).c('pubsub', {
         xmlns: 'http://jabber.org/protocol/pubsub'

@@ -24,7 +24,7 @@ class PushServiceXMPP
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
             @logger.verbose sys.inspect playload
             id = rand.generateKey 7
-            publishElement = elements.publish(id, nodeName, playload.msg)
+            publishElement = elements.publish(id, nodeName, playload.msg, @host)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement
             @handler.send publishElement
@@ -43,7 +43,7 @@ class PushServiceXMPP
         if event.exists is 1
             @logger.verbose "pubsub node #{nodeName} is not existed yet, about to create"
             id = rand.generateKey 7
-            createNodeElement = elements.create_node(id, nodeName)
+            createNodeElement = elements.create_node(id, nodeName, @host)
             @logger.verbose createNodeElement
             @handler.send createNodeElement
         else
@@ -53,14 +53,12 @@ class PushServiceXMPP
             @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
             @logger.verbose sys.inspect info
             id = rand.generateKey 7
-            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}")
-#            subscribeElement = elements.subscribe(id, event.name, info.jid.toLowerCase())
-
+            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}", @host)
             @logger.verbose subscribeElement
             @handler.send subscribeElement
 
 
-    createSubscriber : (subscriber, fields) ->
+    createSubscriber : (subscriber, fields) =>
         if fields.jiduser?
             @logger.verbose 'there is already a jid attached, so ignore'
         else
@@ -71,11 +69,11 @@ class PushServiceXMPP
             password = jid
             @logger.verbose "create new user[#{jid}] on xmpp"
             id = rand.generateKey 7
-            register = elements.register id, jid, password
+            register = elements.register id, jid, password, @host
             @logger.verbose "the xml is:"
             @logger.verbose register
             @handler.send register
-            subscriber.set({jid: jid})
+            subscriber.set({jiduser: jid})
         
 
 
