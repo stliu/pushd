@@ -13,7 +13,7 @@ class PushServiceXMPP
     constructor: (conf, @logger, tokenResolver, eventPublisher) ->
         conf.errorCallback = (errCode, note, device) =>
             @logger?.error("XMPP Error #{errCode} for subscriber #{device?.subscriberId}")
-        @host = conf.host
+        @hostname = conf.hostname
         @driver = new xmpp.Client({jid: conf.user, password: conf.password, host: conf.host})
         @handler = new handler.Handler(@ )
         @handler.setup()
@@ -24,7 +24,7 @@ class PushServiceXMPP
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
             @logger.verbose sys.inspect playload
             id = rand.generateKey 7
-            publishElement = elements.publish(id, nodeName, playload.msg, @host)
+            publishElement = elements.publish(id, nodeName, playload.data, @hostname)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement
             @handler.send publishElement
@@ -43,7 +43,7 @@ class PushServiceXMPP
         if event.exists is 1
             @logger.verbose "pubsub node #{nodeName} is not existed yet, about to create"
             id = rand.generateKey 7
-            createNodeElement = elements.create_node(id, nodeName, @host)
+            createNodeElement = elements.create_node(id, nodeName, @hostname)
             @logger.verbose createNodeElement
             @handler.send createNodeElement
         else
@@ -53,7 +53,7 @@ class PushServiceXMPP
             @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
             @logger.verbose sys.inspect info
             id = rand.generateKey 7
-            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}", @host)
+            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}", @hostname)
             @logger.verbose subscribeElement
             @handler.send subscribeElement
 
@@ -69,7 +69,7 @@ class PushServiceXMPP
             password = jid
             @logger.verbose "create new user[#{jid}] on xmpp"
             id = rand.generateKey 7
-            register = elements.register id, jid, password, @host
+            register = elements.register id, jid, password, @hostname
             @logger.verbose "the xml is:"
             @logger.verbose register
             @handler.send register
