@@ -28,13 +28,13 @@ class PushServiceAPNS
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
             note = new apns.Notification()
-
             device = new apns.Device(info.token)
             device.subscriberId = subscriber.id # used for error logging
             if subOptions?.ignore_message isnt true and alert = payload.title
                 note.alert = alert
-#            note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
-            note.sound = payload.sound
+#            note.badge = badge if not isNaN(badge = (parseInt(info.badge) + 1)))
+            note.badge = 0
+            note.sound = 'default'
             note.payload = payload.data
 #            if payload.msg?
 #                note.payload.msg = payload.msg
