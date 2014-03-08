@@ -41,6 +41,6 @@ class PushServiceAPNS
             logger.verbose "pushing alert [#{util.inspect(note.alert)}] and data[#{util.inspect(note.payload)}] to device #{subscriber.id}"
             @driver.pushNotification note, device
             # On iOS we have to maintain the badge counter on the server
-            subscriber.incr 'badge'
+#            subscriber.incr 'badge'
 
 exports.PushServiceAPNS = PushServiceAPNS
