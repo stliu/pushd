@@ -34,7 +34,7 @@ class PushServiceAPNS
             note.badge = 0
             note.sound = 'default'
             if payload.data["xmpp:details"]?
-                delete payload.data["xmpp:details"]
+                delete payload.data["android:details"]
             note.payload.data = payload.data
 
             device = new apns.Device(info.token)
