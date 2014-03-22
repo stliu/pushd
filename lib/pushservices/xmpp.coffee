@@ -24,7 +24,7 @@ class PushServiceXMPP
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
             @logger.verbose sys.inspect playload
             id = rand.generateKey 7
-            publishElement = elements.publish(id, nodeName, playload, @hostname)
+            publishElement = elements.publish(id, nodeName, "#{playload}", @hostname)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement
             @handler.send publishElement
