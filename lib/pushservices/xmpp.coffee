@@ -18,13 +18,15 @@ class PushServiceXMPP
         @handler = new handler.Handler(@ )
         @handler.setup()
 
-        eventPublisher.on 'publish_event', (event, playload) =>
+        eventPublisher.on 'publish_event', (event, payload) =>
             nodeName = "/#{event.eventkey}"
 
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
-            @logger.verbose sys.inspect playload
+            @logger.verbose sys.inspect payload
             id = rand.generateKey 7
-            publishElement = elements.publish(id, nodeName, "#{playload}", @hostname)
+            if(payload.event?)
+                delete payload["event"]
+            publishElement = elements.publish(id, nodeName, JSON.stringify(payload), @hostname)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement
             @handler.send publishElement
