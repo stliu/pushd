@@ -33,7 +33,7 @@ class PushServiceAPNS
             #note.badge = badge if not isNaN(badge = (parseInt(info.badge) + 1))
             note.badge = 0
             note.sound = 'default'
-            if payload.data["xmpp:details"]?
+            if payload.data["android:details"]?
                 delete payload.data["android:details"]
             note.payload.data = payload.data
 
