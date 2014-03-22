@@ -10,21 +10,21 @@ class Subscriber
         throw new Error("Missing redis connection") if not redis?
         throw new Error("Missing mandatory `proto' field") if not proto?
         throw new Error("Missing mandatory `token' field") if not token?
-      sub_logger.verbose "############################  getInstanceFromToken using proto[#{proto}] and token[#{token}] "
+        sub_logger.verbose "############################  getInstanceFromToken using proto[#{proto}] and token[#{token}] "
         redis.hget "tokenmap", "#{proto}:#{token}", (err, id) =>
             if id?
-              sub_logger.verbose "######################## found id[#{id}]"
+                sub_logger.verbose "######################## found id[#{id}]"
                 # looks like this subscriber is already registered
                 redis.exists "subscriber:#{id}", (err, exists) =>
                     if exists
-                      sub_logger.verbose "################ subscriber:#{id} exist"
+                        sub_logger.verbose "################ subscriber:#{id} exist"
                         cb(new Subscriber(redis, id))
                     else
                         # duh!? the global list reference an unexisting object, fix this inconsistency and return no subscriber
                         redis.hdel "tokenmap", "#{proto}:#{token}", =>
                             cb(null)
             else
-              sub_logger.verbose "########################## can't find the push id"
+                sub_logger.verbose "########################## can't find the push id"
                 cb(null) # No subscriber for this token
 
     create: (redis, fields, cb, tentatives=0) ->
