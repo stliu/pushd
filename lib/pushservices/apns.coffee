@@ -33,6 +33,8 @@ class PushServiceAPNS
             #note.badge = badge if not isNaN(badge = (parseInt(info.badge) + 1))
             note.badge = 0
             note.sound = 'default'
+            if payload.data["xmpp:details"]?
+                delete payload.data["xmpp:details"]
             note.payload.data = payload.data
 
             device = new apns.Device(info.token)

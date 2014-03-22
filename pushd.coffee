@@ -144,7 +144,7 @@ rest_server.param 'jid', (req, res, next, id) ->
 createAndSubscribe = (subscriber, e, option) ->
     pushServices.createEvent(subscriber, e, option)
 
-require('./lib/api').setupRestApi(rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe)
+require('./lib/api').setupRestApi(logger, rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe)
 
 if eventSourceEnabled
     require('./lib/eventsource').setup(rest_server, eventPublisher)

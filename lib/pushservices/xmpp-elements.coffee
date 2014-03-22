@@ -3,15 +3,15 @@ xmpp = require 'node-xmpp'
 exports.register = (id, jid, password, host) ->
     return new xmpp.Element('iq', {id:id, to:host, type:'set'})
     .c('query', {xmlns:'jabber:iq:register'})
-    .c('username').t(jid)
+      .c('username').t(jid)
     .up()
-    .c('password').t(password)
+      .c('password').t(password)
     .up()
-    .c('email')
+      .c('email')
     .up()
-    .c('registered')
+      .c('registered')
     .up()
-    .c('name')
+      .c('name')
     .root()
 exports.presence = () ->
   return new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy')
@@ -42,6 +42,23 @@ exports.subscribe = (id, node, jid, host) ->
   })
   .c('subscription',{jid: jid, subscription:'subscribed'})
   .root()
+
+#  <iq id="ujG00-6" to="pubsub.ac2" type="set">
+#    <pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
+#      <delete node='pushtest3'/>
+#    </pubsub>
+#  </iq>
+
+exports.delete_node = (id, node_name, host) ->
+    return new xmpp.Element('iq', {
+        id: id,
+        to: "pubsub.#{host}",
+        type: set
+    }).c('pubsub', {
+        xmlns: 'http://jabber.org/protocol/pubsub#owner'
+    }).c('delete',{
+        node: node_name
+    }).root()
 
 exports.create_node = (id, node_name, host) ->
     return new xmpp.Element('iq', {

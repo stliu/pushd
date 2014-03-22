@@ -1,13 +1,12 @@
 async = require 'async'
 util = require 'util'
-logger = require 'winston'
 sys = require 'sys'
 filterFields = (params) ->
     fields = {}
     fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version','jid','jiduser', 'appkey']
     return fields
 
-exports.setupRestApi = (app, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe) ->
+exports.setupRestApi = (logger, app, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe) ->
 
     # subscriber registration
     app.post '/subscribers', (req, res) ->
@@ -33,9 +32,10 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, testSubscriber, e
         req.subscriber.get (info) ->
             if not info?
                 logger.error "No subscriber #{req.subscriber.id}"
+                res.send 404
             else
                 logger.verbose "Subscriber #{req.subscriber.id} info: " + JSON.stringify(info)
-            res.json info, if info? then 200 else 404
+                res.json info, 200
 
     # Edit subscriber info
     app.post '/subscriber/:subscriber_id', (req, res) ->
@@ -44,18 +44,18 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, testSubscriber, e
         req.subscriber.set fields, (edited) ->
             if not edited
                 logger.error "No subscriber #{req.subscriber.id}"
-            res.send if edited then 204 else 404
+                res.send 404
+            else
+                res.send 204
 
     # Unregister subscriber
     app.delete '/subscriber/:subscriber_id', (req, res) ->
         req.subscriber.delete (deleted) ->
             if not deleted
                 logger.error "No subscriber #{req.subscriber.id}"
-            res.send if deleted then 204 else 404
-
-    app.post '/subscriber/:subscriber_id/test', (req, res) ->
-        testSubscriber(req.subscriber)
-        res.send 201
+                res.send 404
+            else
+                res.send 204
 
     # Get subscriber subscriptions
     app.get '/subscriber/:subscriber_id/subscriptions', (req, res) ->
