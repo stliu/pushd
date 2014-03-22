@@ -1,7 +1,7 @@
 crypto = require 'crypto'
 async = require 'async'
 Event = require('./event').Event
-logger = require 'winston'
+sub_logger = require 'winston'
 sys = require 'sys'
 class Subscriber
     getInstanceFromToken: (redis, proto, token, cb) ->
@@ -10,21 +10,21 @@ class Subscriber
         throw new Error("Missing redis connection") if not redis?
         throw new Error("Missing mandatory `proto' field") if not proto?
         throw new Error("Missing mandatory `token' field") if not token?
-        logger.verbose "############################  getInstanceFromToken using proto[#{proto}] and token[#{token}] "
+      sub_logger.verbose "############################  getInstanceFromToken using proto[#{proto}] and token[#{token}] "
         redis.hget "tokenmap", "#{proto}:#{token}", (err, id) =>
             if id?
-                logger.verbose "######################## found id[#{id}]"
+              sub_logger.verbose "######################## found id[#{id}]"
                 # looks like this subscriber is already registered
                 redis.exists "subscriber:#{id}", (err, exists) =>
                     if exists
-                        logger.verbose "################ subscriber:#{id} exist"
+                      sub_logger.verbose "################ subscriber:#{id} exist"
                         cb(new Subscriber(redis, id))
                     else
                         # duh!? the global list reference an unexisting object, fix this inconsistency and return no subscriber
                         redis.hdel "tokenmap", "#{proto}:#{token}", =>
                             cb(null)
             else
-                logger.verbose "########################## can't find the push id"
+              sub_logger.verbose "########################## can't find the push id"
                 cb(null) # No subscriber for this token
 
     create: (redis, fields, cb, tentatives=0) ->
@@ -41,15 +41,15 @@ class Subscriber
         # verify if token is already registered
         Subscriber::getInstanceFromToken redis, fields.proto, fields.token, (subscriber) =>
             if subscriber?
-                logger.verbose "--------- found the subscriber, now update subscriber info"
+                @logger.verbose "--------- found the subscriber, now update subscriber info"
                 # this subscriber is already registered
                 delete fields.token
                 delete fields.proto
-                logger.verbose(fields)
+                @logger.verbose(fields)
                 subscriber.set fields, =>
                     cb(subscriber, created=false, tentatives)
             else
-                logger.verbose("------------ generating a new subscriber")
+                @logger.verbose("------------ generating a new subscriber")
                 # register the subscriber using a randomly generated id
                 crypto.randomBytes 8, (ex, buf) =>
                     # generate a base64url random uniq id
@@ -88,10 +88,11 @@ class Subscriber
                                             # done
                                             cb(new Subscriber(redis, id), created=true, tentatives)    
 
-    constructor: (@redis, @id) ->
+    constructor: (@redis, @id, @logger) =>
         @info = null
         @key = "subscriber:#{@id}"
-        logger.verbose "constructing new subscriber with id #{@id}"
+
+        @logger.verbose("constructing new subscriber with id #{@id}")
 
     delete: (cb) ->
         @redis.multi()
@@ -224,7 +225,7 @@ class Subscriber
                     cb(null) # null if subscriber doesn't exist
     # add the subscripter to an event
     addSubscription: (event, options, cb) ->
-        logger.verbose "add subscriber[#{@id}] to event[#{event.name}]"
+        @logger.verbose "add subscriber[#{@id}] to event[#{event.name}]"
         @redis.multi()
             # check subscriber existance
             # Get the score associated with the given member in a sorted set
@@ -240,11 +241,15 @@ class Subscriber
             # lazily add event to the global event list
             .sadd("events", event.name)
             .exec (err, results) =>
+                @logger.verbose "#####################################################"
+                @logger.verbose sys.inspect(results)
+                @logger.verbose "-------------------"
+                @logger.verbose sys.inspect(event)
                 # 这个返回结果是啥? 是第一个 .zscore("subscribers", @id)  的?
                 # 从代码上看是这样的, 可是为啥只判断了这个subscriber的score就认为已经添加了?
                 # 是不是应该是整个multi的返回结果呢, 那么这个results[0]应该是最后一个吧?
                 if results[0]? # subscriber exists?
-                    logger.verbose "Registered subscriber #{@id} to event #{event.name}"
+                    @logger.verbose "Registered subscriber #{@id} to event #{event.name}"
                     event['exists'] = results[4]
                     cb(results[1] is 1, this, event) if cb
                 else
@@ -265,7 +270,7 @@ class Subscriber
                     cb(null) if cb # null if subscriber doesn't exist
 
     removeSubscription: (event, cb) ->
-        logger.verbose "#{@key}:evts -- #{@id} -- #{event.name}"
+        @logger.verbose "#{@key}:evts -- #{@id} -- #{event.name}"
         @redis.multi()
             # check subscriber existance
             .zscore("subscribers", @id)
@@ -281,7 +286,7 @@ class Subscriber
                 if results[0]? # subscriber exists?
                     wasRemoved = results[1] is 1 # true if removed, false if wasn't subscribed
                     if wasRemoved
-                        logger.verbose "Subscriber #{@id} unregistered from event #{event.name}"
+                        @logger.verbose "Subscriber #{@id} unregistered from event #{event.name}"
                     cb(null, wasRemoved) if cb
                 else
                     cb(null) if cb # null if subscriber doesn't exist

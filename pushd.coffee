@@ -72,7 +72,7 @@ rest_server.configure ->
     rest_server.use(express.responseTime())
 
 getSubscriber = (appkey, subscriber_id) ->
-    return new Subscriber(redis, subscriber_id)
+    return new Subscriber(redis, subscriber_id, logger)
 
 getSubscriberFromJid = (appkey, jid, cb) ->
     redis.get "jid:#{jid}", (err, subscriber_id) ->
