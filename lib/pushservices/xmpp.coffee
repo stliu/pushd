@@ -42,14 +42,11 @@ class PushServiceXMPP
 
     createEvent : (subscriber, event, options) ->
         nodeName = "/#{event.eventkey}"
-        if event.exists is 1
-            @logger.verbose "pubsub node #{nodeName} is not existed yet, about to create"
-            id = rand.generateKey 7
-            createNodeElement = elements.create_node(id, nodeName, @hostname)
-            @logger.verbose createNodeElement
-            @handler.send createNodeElement
-        else
-            @logger.verbose "event.exist is not 1, then it is #{event.exists}"
+
+        id = rand.generateKey 7
+        createNodeElement = elements.create_node(id, nodeName, @hostname)
+        @logger.verbose createNodeElement
+        @handler.send createNodeElement
         @logger.verbose "now the pubsub node[#{nodeName}] existed, we need to subscribe the subscriber to the node"
         subscriber.get (info) =>
             @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
