@@ -17,7 +17,9 @@ sys = require 'sys'
 
 if settings.loglevel?
     logger.remove(logger.transports.Console);
-    logger.add(logger.transports.Console, { level: settings.loglevel });
+    logger.add(logger.transports.File, { level: settings.loglevel, filename: 'pushd.log', maxsize : 1024 * 1024 * 5 });
+    logger.handleExceptions(new logger.transports.File({ level: settings.loglevel, filename: 'pushd-exception.log', maxsize : 1024 * 1024 * 5 }));
+
 
 if settings.server?.redis_auth?
     redis.auth(settings.server.redis_auth)
