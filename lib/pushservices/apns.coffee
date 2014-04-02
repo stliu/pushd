@@ -31,11 +31,9 @@ class PushServiceAPNS
             if subOptions?.ignore_message isnt true
                 note.alert = payload.title
             #note.badge = badge if not isNaN(badge = (parseInt(info.badge) + 1))
-            logger.verbose "got payload to be sent to apns:"
-            logger.verbose util.inspect(payload)
             note.badge = 0
             note.sound = 'default'
-            if(payload.data?["android:details"]?)
+            if(payload.data["android:details"]?)
                 delete payload.data["android:details"]
             note.payload.data = payload.data
 
