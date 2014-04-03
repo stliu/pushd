@@ -20,12 +20,17 @@ class PushServiceXMPP
 
         eventPublisher.on 'publish_event', (event, payload) =>
             nodeName = "/#{event.eventkey}"
+            if(payload.proto? and payload.proto is not 'android')
+                return
 
             @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
-            @logger.verbose sys.inspect payload
             id = rand.generateKey 7
-            if(payload.event?)
-                delete payload["event"]
+#
+#            if(payload.event?)
+#                delete payload["event"]
+
+            @logger.verbose sys.inspect payload
+
             publishElement = elements.publish(id, nodeName, JSON.stringify(payload), @hostname)
             @logger.verbose 'the xml to be sent is'
             @logger.verbose publishElement

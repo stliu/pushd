@@ -18,6 +18,7 @@ class Payload
                 when 'msg' then @msg = value
                 when 'sound' then @sound = value
                 when 'data' then @data = value
+                when 'proto' then @proto = value
 
         # Detect empty payload
         sum = 0

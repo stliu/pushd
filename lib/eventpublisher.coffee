@@ -17,7 +17,7 @@ class EventPublisher extends events.EventEmitter
     publish: (event, data, cb) ->
         try
             payload = new Payload(data)
-            payload.event = event
+#            payload.event = event
         catch e
             # Invalid payload (empty, missing key or invalid key format)
             @logger.error 'Invalid payload ' + e
