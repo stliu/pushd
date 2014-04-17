@@ -48,7 +48,8 @@
     "junction": "*",
     "node-xmpp": "~0.6.3",
     "generate-key": "0.0.6",
-    "secure_random": "~0.1.0"
+    "secure_random": "~0.1.0",
+    "newrelic" : ""
   },
   "devDependencies": {
     "mocha": "*",
