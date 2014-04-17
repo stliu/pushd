@@ -63,11 +63,19 @@ checkUserAndPassword = (username, password) =>
     return false
 
 rest_server = express()
+
+allowCrossDomain = (req, res, next) =>
+    res.header('Access-Control-Allow-Origin', '*')
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
+    next()
+
 rest_server.configure ->
     rest_server.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
     rest_server.use(express.logger('[:date] :remote-addr :method :url :status :response-time')) if settings.server?.access_log
     rest_server.use(express.limit('1mb')) # limit posted data to 1MB
     rest_server.use(express.bodyParser())
+    rest_server.use(allowCrossDomain)
     rest_server.use(rest_server.router)
     rest_server.enable('trust proxy')
     rest_server.disable('x-powered-by');
@@ -97,7 +105,7 @@ getAppFromKey = (id) ->
 rest_server.all '*', (req, res, next) ->
     try
         appkey = req.get('appkey' )
-        throw new Error("missing app key in request header") if not appkey?
+        throw new Error("missing app key in request header") if not appkey? and not (/^\/id\//).test(req.path)
         logger.verbose("------------------- " + appkey)
         req.application = getAppFromKey(appkey)
         next()
