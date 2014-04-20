@@ -15,51 +15,62 @@ class PushServiceXMPP
             @logger?.error("XMPP Error #{errCode} for subscriber #{device?.subscriberId}")
         @hostname = conf.hostname
         @driver = new xmpp.Client({jid: conf.user, password: conf.password, host: conf.host})
-        @handler = new handler.Handler(@ )
+        @handler = new handler.Handler(@, @logger )
         @handler.setup()
 
-        eventPublisher.on 'publish_event', (event, payload) =>
-            nodeName = "/#{event.eventkey}"
-            if(payload.proto? and payload.proto is not 'android')
-                return
-
-            @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
-            id = rand.generateKey 7
+#        eventPublisher.on 'publish_event', (event, payload) =>
+#            nodeName = "/#{event.eventkey}"
+#            if(payload.proto? and payload.proto is not 'android')
+#                return
 #
-#            if(payload.event?)
-#                delete payload["event"]
-
-            @logger.verbose sys.inspect payload
-
-            publishElement = elements.publish(id, nodeName, JSON.stringify(payload), @hostname)
-            @logger.verbose 'the xml to be sent is'
-            @logger.verbose publishElement
-            @handler.send publishElement
+#            @logger.verbose "publishing event #{nodeName} from xmpp with payload:"
+#            id = rand.generateKey 7
+##
+##            if(payload.event?)
+##                delete payload["event"]
+#
+#            @logger.verbose sys.inspect payload
+#
+#            publishElement = elements.publish(id, nodeName, JSON.stringify(payload), @hostname)
+#            @logger.verbose 'the xml to be sent is'
+#            @logger.verbose publishElement
+#            @handler.send publishElement
 
     # what's subOptions? 
     # here we should only send to the xmpp pubsub node once based on the event name
     # then mark this envent to ignore the subscritianl push
     push: (subscriber, subOptions, payload) ->
-        @logger.verbose "calling xmpp push service's push method, which will be ignored"
-        @logger.verbose sys.inspect subOptions
-
-
-
-    createEvent : (subscriber, event, options) ->
-        nodeName = "/#{event.eventkey}"
-
+#        @logger.verbose "calling xmpp push service's push method, which will be ignored"
+#        @logger.verbose sys.inspect subOptions
+#        if(payload.proto? and payload.proto is not 'android')
+#            return
         id = rand.generateKey 7
-        createNodeElement = elements.create_node(id, nodeName, @hostname)
-        @logger.verbose createNodeElement
-        @handler.send createNodeElement
-        @logger.verbose "now the pubsub node[#{nodeName}] existed, we need to subscribe the subscriber to the node"
-        subscriber.get (info) =>
-            @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
-            @logger.verbose sys.inspect info
-            id = rand.generateKey 7
-            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}", @hostname)
-            @logger.verbose subscribeElement
-            @handler.send subscribeElement
+        @logger.debug sys.inspect payload
+        @logger.debug sys.inspect subscriber
+        if subscriber.info?.jiduser?
+            publishElement = elements.message(id, subscriber.info.jiduser, JSON.stringify(payload), @hostname)
+            console.log 'the xml to be sent is'
+            console.log publishElement
+            @handler.send publishElement
+
+
+
+#
+#    createEvent : (subscriber, event, options) ->
+#        nodeName = "/#{event.eventkey}"
+#
+#        id = rand.generateKey 7
+#        createNodeElement = elements.create_node(id, nodeName, @hostname)
+#        @logger.verbose createNodeElement
+#        @handler.send createNodeElement
+#        @logger.verbose "now the pubsub node[#{nodeName}] existed, we need to subscribe the subscriber to the node"
+#        subscriber.get (info) =>
+#            @logger.verbose "pubsub node is #{nodeName}, subscriber info is"
+#            @logger.verbose sys.inspect info
+#            id = rand.generateKey 7
+#            subscribeElement = elements.subscribe(id, nodeName, "#{info.jiduser}", @hostname)
+#            @logger.verbose subscribeElement
+#            @handler.send subscribeElement
 
 
     createSubscriber : (subscriber, fields) =>

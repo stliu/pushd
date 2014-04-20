@@ -25,7 +25,7 @@ class EventPublisher extends events.EventEmitter
             return
       # 广播这个消息出去, 这是因为下面的逻辑其实是获取到每一个subscriber, 然后对其依次调用push service
       # 这样, xmpp的pubsub就没办法了, 而通过接收这个广播消息, xmpp的pubsub就可以工作了
-        @.emit('publish_event', event, payload)
+#        @.emit('publish_event', event, payload)
         @.emit(event.name, event, payload)
 
         event.exists (exists) =>

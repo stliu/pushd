@@ -16,6 +16,14 @@ exports.register = (id, jid, password, host) ->
 exports.presence = () ->
   return new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy')
 
+exports.message = (id, to, message, host) ->
+  return new xmpp.Element("message", {
+    id: id,
+    to: to+"@"+host,
+    from: "admin@#{host}",
+    type: 'chat'
+  }).c("body").t(message).root()
+
 exports.publish = (id, node, message, host) ->
     return new xmpp.Element('iq', {
         id: id,

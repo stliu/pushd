@@ -1,23 +1,23 @@
 xmpp = require 'node-xmpp'
 elements = require './xmpp-elements'
-logger = require 'winston'
 sys = require 'sys'
 async = require 'async'
 
 class Handler
-  constructor : (@xmppPublisher) ->
+  constructor : (@xmppPublisher, @logger) ->
     @client = @xmppPublisher.driver
     @q = {}
   send : (stanza) =>
+    @logger.debug("sending " + stanza)
     @client.send(stanza)
     id = stanza.attrs.id
     if(id? and not @q[id]?)
-      @q[id] = (result) ->
-        logger.verbose("result of id[#{id}] is #{result}")
+      @q[id] = (result) =>
+        @logger.debug("result of id[#{id}] is #{result}")
 
   iq : (stanza) =>
-    logger.verbose "got `iq` message from server:"
-    logger.verbose stanza
+    @logger.verbose "got `iq` message from server:"
+    @logger.verbose stanza
 #    if stanza.attrs.type isnt 'error'
       #check the id from xmpp publisher for handler
     id = stanza.attrs.id
@@ -28,17 +28,17 @@ class Handler
       async.each( stanza.children, @next, () -> )
 
 #  message : (stanza) ->
-#    logger.verbose "got `message` from server"
-#    logger.verbose stanza
+#    @logger.verbose "got `message` from server"
+#    @logger.verbose stanza
 #    async.each( stanza.children, @next, () -> )
 #
 #  active : (stanza) ->
-#    logger.verbose "got `active` from server"
-#    logger.verbose stanza
+#    @logger.verbose "got `active` from server"
+#    @logger.verbose stanza
 #
 #  body : (stanza) ->
-#    logger.verbose "got `body` from server"
-#    logger.verbose stanza
+#    @logger.verbose "got `body` from server"
+#    @logger.verbose stanza
 
   ping : (stanza) ->
     if stanza.attrs.xmlns is 'urn:xmpp:ping'
@@ -51,7 +51,7 @@ class Handler
       stanza.attrs.type = 'result'
       @client.send stanza
     else
-      logger.verbose "got `ping` message but the xmlns[#{stanza.attrs.xmlns}] is not expected"
+      @logger.verbose "got `ping` message but the xmlns[#{stanza.attrs.xmlns}] is not expected"
 
   presence : (stanza) ->
 
@@ -60,7 +60,7 @@ class Handler
     if @[m]?
       @[m](stanza)
     else
-      logger.verbose "there is no handler for #{m}"
+      @logger.verbose "there is no handler for #{m}"
 
   setup : () ->
     #send presence when this client is online
@@ -69,8 +69,8 @@ class Handler
 
     @client.on 'error', (stanza) =>
       #todo some error handle here
-      logger.error "something wrong happening"
-      logger.error stanza
+      @logger.error "something wrong happening"
+      @logger.error stanza
 
     @client.on "stanza", (stanza) =>
       @next(stanza)

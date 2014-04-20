@@ -139,7 +139,7 @@ exports.setupRestApi = (logger, app, createSubscriber, getEventFromId, testSubsc
 #            options |= req.event.OPTION_IGNORE_MESSAGE
         req.subscriber.addSubscription req.event, options, (added, subscriber, event) =>
             if added? # added is null if subscriber doesn't exist
-                createAndSubscribe subscriber, event, options
+#                createAndSubscribe subscriber, event, options
                 res.send if added then 201 else 204
             else
                 logger.error "No subscriber #{req.subscriber.id}"

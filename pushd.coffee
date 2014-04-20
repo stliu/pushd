@@ -17,8 +17,9 @@ sys = require 'sys'
 
 if settings.loglevel?
     logger.remove(logger.transports.Console);
-    logger.add(logger.transports.File, { level: settings.loglevel, filename: 'pushd.log', maxsize : 1024 * 1024 * 5 });
-    logger.handleExceptions(new logger.transports.File({ level: settings.loglevel, filename: 'pushd-exception.log', maxsize : 1024 * 1024 * 5 }));
+    logger.add(logger.transports.Console, {level: settings.loglevel});
+#    logger.add(logger.transports.File, { level: settings.loglevel, filename: 'pushd.log', maxsize : 1024 * 1024 * 5 });
+#    logger.handleExceptions(new logger.transports.File({ level: settings.loglevel, filename: 'pushd-exception.log', maxsize : 1024 * 1024 * 5 }));
 
 
 if settings.server?.redis_auth?
@@ -151,10 +152,10 @@ rest_server.param 'jid', (req, res, next, id) ->
         logger.error("run into error: " + error.message)
         res.json error: error.message, 400
 
-createAndSubscribe = (subscriber, e, option) ->
-    pushServices.createEvent(subscriber, e, option)
+#createAndSubscribe = (subscriber, e, option) ->
+#    pushServices.createEvent(subscriber, e, option)
 
-require('./lib/api').setupRestApi(logger, rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher, createAndSubscribe)
+require('./lib/api').setupRestApi(logger, rest_server, createSubscriber, getEventFromId, testSubscriber, eventPublisher)
 
 if eventSourceEnabled
     require('./lib/eventsource').setup(rest_server, eventPublisher)
