@@ -12,10 +12,7 @@ class PushServices
 
     push: (subscriber, subOptions, payload, cb) ->
         subscriber.get (info) =>
-            console.log("push to subscriber: " + info.proto)
-            console.log("-------------------------------------")
-            console.log(info)
-            if info and info.proto? then @services[info.proto]?.push(subscriber, subOptions, payload)
+            if info? and info['proto']? then @services[info.proto]?.push(subscriber, subOptions, payload)
             cb() if cb
 
 exports.PushServices = PushServices

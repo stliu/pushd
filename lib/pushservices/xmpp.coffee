@@ -44,14 +44,14 @@ class PushServiceXMPP
 #        @logger.verbose sys.inspect subOptions
 #        if(payload.proto? and payload.proto is not 'android')
 #            return
-        id = rand.generateKey 7
-        @logger.debug sys.inspect payload
-        @logger.debug sys.inspect subscriber
-        if subscriber.info?.jiduser?
-            publishElement = elements.message(id, subscriber.info.jiduser, JSON.stringify(payload), @hostname)
-            console.log 'the xml to be sent is'
-            console.log publishElement
-            @handler.send publishElement
+        subscriber.get (info) =>
+
+          id = rand.generateKey 7
+          @logger.debug sys.inspect payload
+          @logger.debug sys.inspect info
+          if info?.jiduser?
+              publishElement = elements.message(id, info.jiduser, JSON.stringify(payload), @hostname)
+              @handler.send publishElement
 
 
 
