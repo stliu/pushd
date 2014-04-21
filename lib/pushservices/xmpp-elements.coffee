@@ -21,7 +21,7 @@ exports.message = (id, to, message, host) ->
     id: id,
     to: to+"@"+host,
     from: "admin@#{host}",
-    type: 'chat'
+    type: 'headline'
   }).c("body").t(message).root()
 
 exports.publish = (id, node, message, host) ->
