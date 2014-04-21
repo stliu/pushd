@@ -17,9 +17,10 @@ exports.presence = () ->
   return new xmpp.Element('presence', {}).c('show').t('chat').up().c('status').t('this is the push server, enjoy')
 
 exports.message = (id, to, message, host) ->
+  target = (/.*@ac2$/).test(to) ? to : to+"@"+host
   return new xmpp.Element("message", {
     id: id,
-    to: to+"@"+host,
+    to: target,
     from: "admin@#{host}",
     type: 'headline'
   }).c("body").t(message).root()
